@@ -88,11 +88,16 @@ header{height:84px}
 </div>
 <div class="note">AI can make mistakes. Verify important information.</div>
 </footer>
+<div id="imageLightbox" role="dialog" aria-modal="true" aria-label="Full-screen image preview"><button id="closeLightbox" aria-label="Close image preview">×</button><img id="lightboxImage" alt="Full-screen AI generated image"><div class="lightboxHint">Tap outside or × to close</div></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const history=[],picked=[];
 let busy=false;
+function closeLightbox(){$("imageLightbox").classList.remove("open");$("lightboxImage").removeAttribute("src");}
+$("closeLightbox").onclick=closeLightbox;
+$("imageLightbox").onclick=e=>{if(e.target===$("imageLightbox"))closeLightbox();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLightbox();});
 let workMode=false;
 
 function scrollBottom(){
@@ -224,8 +229,10 @@ async function send(){
       }
       pending.replaceChildren();
       const img=document.createElement("img");
-      img.alt="AI generated image";
-      img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px";
+      img.alt="AI generated image — tap to view full screen";
+      img.title="Tap to view full screen";
+      img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px;cursor:zoom-in";
+      img.onclick=()=>{$("lightboxImage").src=img.src;$("imageLightbox").classList.add("open");};
       img.onload=()=>scrollBottom();
       img.onerror=()=>{
         pending.replaceChildren();
