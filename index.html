@@ -1,55 +1,122 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#10131b"><title>Nova AI</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131b">
+<meta name="description" content="Nova AI Assistant - chat, brainstorm, and get help with everyday tasks.">
+<title>Nova AI Assistant</title>
 <style>
-:root{color-scheme:dark;--bg:#10131b;--panel:#191e29;--line:#2a3040;--text:#f5f7ff;--muted:#aab2c5;--accent:#9a8cff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,sans-serif;height:100dvh;display:flex;flex-direction:column}
-header{padding:15px 17px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--line);background:#121620}
-.logo{width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,#7c6cff,#53d6d1);display:grid;place-items:center;font-weight:900;color:#fff}
-.brand{font-weight:750;font-size:18px}.sub{font-size:12px;color:var(--muted)}.spacer{flex:1}
-#status{font-size:11px;color:#9de4b0;border:1px solid #315342;border-radius:20px;padding:5px 8px}
-main{flex:1;overflow:auto;padding:20px 14px 12px;max-width:850px;width:100%;margin:auto}
-.welcome{text-align:center;padding:9vh 8px 24px}.orb{width:65px;height:65px;margin:0 auto 18px;border-radius:22px;background:linear-gradient(135deg,#7c6cff,#49d6cf);display:grid;place-items:center;font-size:30px}
-h1{font-size:29px;margin:0 0 9px}.welcome p{color:var(--muted);line-height:1.5;margin:0 auto 24px;max-width:410px}
-.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:530px;margin:auto}
-.suggest{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:15px;text-align:left;padding:13px;min-height:68px;font:inherit;font-size:14px}
-#messages{display:flex;flex-direction:column;gap:16px;padding-bottom:20px}.msg{max-width:92%;padding:13px 15px;border-radius:18px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.user{align-self:flex-end;background:#5147a8}.assistant{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}.error{color:#ffb3b3}
-footer{padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#121620}
-.tools{display:flex;gap:8px;max-width:850px;margin:0 auto 9px;overflow-x:auto}.tool{white-space:nowrap;border:1px solid var(--line);background:transparent;color:var(--muted);padding:7px 11px;border-radius:20px;font-size:13px}.tool:active,.tool.active{border-color:var(--accent);color:#fff}
-.composer{max-width:850px;margin:auto;display:flex;align-items:flex-end;gap:8px;border:1px solid #343b4d;background:#1a202c;border-radius:23px;padding:8px}
-textarea{resize:none;max-height:150px;min-height:40px;flex:1;width:100%;background:transparent;border:0;outline:0;color:var(--text);font:inherit;padding:9px 4px}
-.iconbtn{border:0;border-radius:15px;width:42px;height:42px;background:#2a3040;color:#fff;font-size:19px;flex-shrink:0}.send{background:var(--accent);color:#10131b;font-weight:800}
-.note{max-width:850px;margin:8px auto 0;color:#858da1;font-size:11px;text-align:center}
+:root{color-scheme:dark;--bg:#10131b;--panel:#191e29;--line:#2a3040;--text:#f5f7ff;--muted:#aab2c5;--accent:#9a8cff;--accent2:#53d6d1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;height:100dvh;display:flex;flex-direction:column}
+header{padding:13px 15px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--line);background:#121620;flex-shrink:0}
+.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,#7c6cff,#53d6d1);display:grid;place-items:center;font-weight:900;font-size:20px}
+.brand{font-weight:800;font-size:18px}.sub{font-size:12px;color:var(--muted)}.spacer{flex:1}
+#status{font-size:11px;color:#9de4b0;border:1px solid #315342;border-radius:20px;padding:5px 8px;white-space:nowrap}
+main{flex:1;overflow:auto;padding:16px 13px 20px;max-width:900px;width:100%;margin:0 auto;scroll-behavior:smooth}
+.welcome{text-align:center;padding:7vh 8px 24px}.orb{width:68px;height:68px;margin:0 auto 17px;border-radius:23px;background:linear-gradient(135deg,#7c6cff,#49d6cf);display:grid;place-items:center;font-size:31px;box-shadow:0 12px 38px #6556ff30}
+h1{font-size:clamp(25px,6vw,32px);margin:0 0 9px}.welcome p{color:var(--muted);line-height:1.5;margin:0 auto 24px;max-width:420px}
+.suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:550px;margin:auto}
+.suggest{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:15px;text-align:left;padding:13px;min-height:70px;font:inherit;font-size:14px;cursor:pointer}
+.suggest:active,.tool:active{border-color:var(--accent)}
+#messages{display:flex;flex-direction:column;gap:14px;padding:8px 0 20px}
+.msg{max-width:94%;padding:12px 14px;border-radius:18px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.user{align-self:flex-end;background:#5147a8;border-bottom-right-radius:6px}
+.assistant{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:6px}
+.error{color:#ffb3b3}.typing{opacity:.8}
+footer{padding:9px 11px calc(9px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#121620;flex-shrink:0}
+.tools{display:flex;gap:8px;max-width:850px;margin:0 auto 9px;overflow-x:auto;padding-bottom:2px}
+.tool{white-space:nowrap;border:1px solid var(--line);background:transparent;color:var(--muted);padding:7px 11px;border-radius:20px;font-size:13px;cursor:pointer}
+.tool.active{border-color:var(--accent);color:#fff}
+.composer{max-width:850px;margin:auto;display:flex;align-items:flex-end;gap:8px;border:1px solid #343b4d;background:#1a202c;border-radius:23px;padding:7px}
+textarea{resize:none;max-height:140px;min-height:42px;flex:1;width:100%;background:transparent;border:0;outline:0;color:var(--text);font:inherit;padding:10px 4px}
+.iconbtn{border:0;border-radius:15px;width:42px;height:42px;background:#2a3040;color:#fff;font-size:20px;flex-shrink:0;cursor:pointer}
+.send{background:var(--accent);color:#10131b;font-weight:900}.send:disabled{opacity:.5}
+.note{max-width:850px;margin:7px auto 0;color:#858da1;font-size:10px;text-align:center}
 #file{display:none}
-@media(min-width:650px){main{padding-top:28px}.welcome{padding-top:10vh}.msg{max-width:80%}}
-</style></head>
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(min-width:650px){main{padding-top:24px}.welcome{padding-top:8vh}.msg{max-width:82%}}
+</style>
+</head>
 <body>
-<header><div class="logo">N</div><div><div class="brand">Nova AI</div><div class="sub">Your AI assistant</div></div><div class="spacer"></div><div id="status">● Ready</div></header>
+<header>
+  <div class="logo">N</div>
+  <div><div class="brand">Nova AI</div><div class="sub">Your personal AI assistant</div></div>
+  <div class="spacer"></div><div id="status">● Checking</div>
+</header>
 <main id="main">
-<section class="welcome" id="welcome"><div class="orb">✦</div><h1>What can I help with?</h1><p>Chat, ask questions, brainstorm ideas, or get help with everyday tasks.</p>
-<div class="suggestions"><button class="suggest" data-prompt="Help me make a plan for today.">✦ Plan my day</button><button class="suggest" data-prompt="Explain artificial intelligence in simple words.">◈ Explain something</button><button class="suggest" data-prompt="Give me creative ideas for a new project.">✧ Creative ideas</button><button class="suggest" data-prompt="Help me write a clear, friendly message.">✎ Write something</button></div></section>
-<section id="messages" aria-live="polite"></section></main>
-<footer><div class="tools"><button class="tool" id="attach">＋ Attach file</button><button class="tool" id="voice">🎙 Voice input</button><button class="tool" id="speak">🔊 Read replies</button><button class="tool" id="newchat">＋ New chat</button></div>
-<div class="composer"><input type="file" id="file" accept="image/*,.pdf,.txt,.doc,.docx"><button class="iconbtn" id="pick" aria-label="Attach">＋</button><textarea id="prompt" rows="1" placeholder="Message Nova AI…"></textarea><button class="iconbtn send" id="send" aria-label="Send">↑</button></div><div class="note">Nova AI can make mistakes. Verify important information.</div></footer>
+  <section class="welcome" id="welcome">
+    <div class="orb">✦</div><h1>What can I help with?</h1>
+    <p>Ask questions, explore ideas, write messages, learn something new, or plan your day.</p>
+    <div class="suggestions">
+      <button class="suggest" data-prompt="Help me make a simple plan for today.">✦ Plan my day</button>
+      <button class="suggest" data-prompt="Explain artificial intelligence in simple words.">◈ Explain something</button>
+      <button class="suggest" data-prompt="Give me creative ideas for a new project.">✧ Creative ideas</button>
+      <button class="suggest" data-prompt="Help me write a clear, friendly message.">✎ Write something</button>
+    </div>
+  </section>
+  <section id="messages" aria-live="polite" aria-label="Conversation"></section>
+</main>
+<footer>
+  <div class="tools">
+    <button class="tool" id="voice">🎙 Voice input</button>
+    <button class="tool" id="speak">🔊 Read replies</button>
+    <button class="tool" id="newchat">＋ New chat</button>
+    <button class="tool" id="clear">⌫ Clear chat</button>
+  </div>
+  <div class="composer">
+    <textarea id="prompt" rows="1" aria-label="Message Nova AI" placeholder="Message Nova AI…"></textarea>
+    <button class="iconbtn send" id="send" aria-label="Send message">↑</button>
+  </div>
+  <div class="note">AI can make mistakes. Verify important information.</div>
+</footer>
 <script>
-const $=id=>document.getElementById(id), messages=[], attachments=[]; let reading=false;
-function add(role,text,cls=""){const d=document.createElement("div");d.className="msg "+role+(cls?" "+cls:"");d.textContent=text;$("messages").appendChild(d);$("welcome").style.display="none";$("main").scrollTop=$("main").scrollHeight;return d}
-async function send(text){text=(text??$("prompt").value).trim();if(!text&&!attachments.length)return;
- $("prompt").value="";$("prompt").style.height="40px"; const userText=text+(attachments.length?"\n[Attached: "+attachments.map(f=>f.name).join(", ")+"]":"");
- attachments.length=0;$("file").value="";add("user",userText);messages.push({role:"user",content:userText});
- const pending=add("assistant","Nova is thinking…");$("send").disabled=true;$("status").textContent="● Thinking";
- try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages})});const data=await r.json();if(!r.ok)throw Error(data.error||"Could not get a response.");pending.textContent=data.reply;messages.push({role:"assistant",content:data.reply});if(reading&&"speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(data.reply))}}
- catch(e){pending.textContent="⚠ "+e.message;pending.classList.add("error")}
- finally{$("send").disabled=false;$("status").textContent="● Ready";$("main").scrollTop=$("main").scrollHeight}}
-$("send").onclick=()=>send();$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
-$("prompt").addEventListener("input",()=>{$("prompt").style.height="auto";$("prompt").style.height=Math.min($("prompt").scrollHeight,150)+"px"});
-document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>send(b.dataset.prompt));
-$("pick").onclick=$("attach").onclick=()=>$("file").click();
-$("file").onchange=()=>{if($("file").files.length){attachments.push(...$("file").files);$("prompt").placeholder=attachments.length+" file(s) selected — describe them in your message";}};
-$("newchat").onclick=()=>{messages.length=0;attachments.length=0;$("messages").replaceChildren();$("welcome").style.display="block";$("prompt").value="";$("prompt").placeholder="Message Nova AI…"};
-$("speak").onclick=()=>{reading=!reading;$("speak").classList.toggle("active",reading);$("speak").textContent=reading?"🔊 Read replies: on":"🔊 Read replies";if(!reading&&"speechSynthesis"in window)speechSynthesis.cancel()};
-$("voice").onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){add("assistant","Voice input isn't supported in this browser. Try Chrome on Android.");return}const rec=new SR();rec.lang=navigator.language||"en-US";rec.onstart=()=>$("voice").textContent="🎙 Listening…";rec.onresult=e=>{$("prompt").value=e.results[0][0].transcript};rec.onerror=()=>add("assistant","Couldn't hear that. Please try again.");rec.onend=()=>$("voice").textContent="🎙 Voice input";rec.start()};
-fetch("/api/health").then(r=>r.json()).then(d=>{if(!d.chatConfigured){$("status").textContent="● Setup needed";$("status").style.color="#ffd28a"}}).catch(()=>{$("status").textContent="● Offline"});
-</script></body></html>
+const $=id=>document.getElementById(id);
+const messages=[];
+let reading=false, busy=false;
+function scrollBottom(){requestAnimationFrame(()=>{$("main").scrollTop=$("main").scrollHeight})}
+function add(role,text,extra=""){
+  const d=document.createElement("div");d.className="msg "+role+(extra?" "+extra:"");d.textContent=text;
+  $("messages").appendChild(d);$("welcome").style.display="none";scrollBottom();return d;
+}
+async function send(text){
+  if(busy)return;
+  text=(typeof text==="string"?text:$("prompt").value).trim();
+  if(!text)return;
+  $("prompt").value="";$("prompt").style.height="42px";
+  add("user",text);messages.push({role:"user",content:text});
+  const pending=add("assistant","Nova is thinking…","typing");
+  busy=true;$("send").disabled=true;$("status").textContent="● Thinking";
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages})});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(data.error||"Could not get a response. Please try again.");
+    const reply=String(data.reply||"I couldn't create a reply this time.");
+    pending.textContent=reply;pending.classList.remove("typing");messages.push({role:"assistant",content:reply});
+    if(reading&&"speechSynthesis"in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(reply));}
+  }catch(e){pending.textContent="⚠ "+e.message;pending.classList.remove("typing");pending.classList.add("error");messages.pop();}
+  finally{busy=false;$("send").disabled=false;$("status").textContent="● Ready";$("prompt").focus();scrollBottom();}
+}
+$("send").addEventListener("click",()=>send());
+$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+$("prompt").addEventListener("input",()=>{$("prompt").style.height="auto";$("prompt").style.height=Math.min($("prompt").scrollHeight,140)+"px";});
+document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>send(b.dataset.prompt)));
+$("newchat").onclick=$("clear").onclick=()=>{if(busy)return;messages.length=0;$("messages").replaceChildren();$("welcome").style.display="block";$("prompt").value="";if("speechSynthesis"in window)speechSynthesis.cancel();};
+$("speak").onclick=()=>{reading=!reading;$("speak").classList.toggle("active",reading);$("speak").textContent=reading?"🔊 Read replies: on":"🔊 Read replies";if(!reading&&"speechSynthesis"in window)speechSynthesis.cancel();};
+$("voice").onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){add("assistant","Voice input isn't supported in this browser. Try Chrome on Android.");return;}
+  const rec=new SR();rec.lang=navigator.language||"en-US";rec.interimResults=false;
+  rec.onstart=()=>{$("voice").textContent="🎙 Listening…";};
+  rec.onresult=e=>{$("prompt").value=e.results[0][0].transcript;$("prompt").dispatchEvent(new Event("input"));};
+  rec.onerror=()=>add("assistant","Couldn't hear that. Please try again.");
+  rec.onend=()=>{$("voice").textContent="🎙 Voice input";};rec.start();
+};
+fetch("/api/health").then(r=>r.json()).then(d=>{
+  $("status").textContent=d.chatConfigured?"● Ready":"● Setup needed";
+  if(!d.chatConfigured)$("status").style.color="#ffd28a";
+}).catch(()=>{$("status").textContent="● Offline";$("status").style.color="#ffb3b3";});
+</script>
+</body>
+</html>

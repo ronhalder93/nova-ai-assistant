@@ -1,26 +1,33 @@
-# Nova AI — fresh standalone project
+# Nova AI Assistant
 
-This folder is a new project and does not modify or import code from any older Nova projects.
+A standalone, Android-friendly AI chat website built with Node.js and Express. This project is independent; it does not import or change any other Nova project.
 
-## Included now
-- Mobile-friendly chat interface
-- Multi-turn chat history during the current chat
-- Voice input (browser support required)
+## Features
+- Responsive mobile-first chat UI
+- Multi-turn conversation while the page remains open
+- Voice input when supported by the browser
 - Optional text-to-speech for replies
-- File selection UI (currently adds filenames to the prompt; it does not upload/analyse file contents)
-- Server-side API key handling
+- Server-side API key handling (the key is never placed in browser code)
+- Health endpoint for hosting checks
 
-## Connect the chat model
+## Run locally
 1. Install Node.js 18 or newer.
-2. In this folder run `npm install`.
-3. Copy `.env.example` to `.env`.
-4. Put your provider API key in `OPENAI_API_KEY` in `.env`; never put it in the HTML.
-5. Run `npm start`, then open `http://localhost:3000`.
+2. Open this folder in a terminal.
+3. Run `npm install`.
+4. Copy `.env.example` to `.env`.
+5. Put your provider key in `.env` as `OPENAI_API_KEY=your_key_here`.
+6. Run `npm start`.
+7. Open `http://localhost:3000`.
 
-Chat needs a valid API key and network access. API usage may cost money depending on the provider/account.
+## Deploy to Render
+Create/use the Render service for this Nova AI Assistant repository only.
 
-## Not connected yet
-Image generation, video generation, image/file understanding, accounts, and saved chats are not implemented in this starter. They must be added with real provider endpoints and credentials; the interface does not pretend they already work.
+- Build command: `npm install`
+- Start command: `npm start`
+- Environment variable: `OPENAI_API_KEY` (required for actual AI replies)
+- Optional environment variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`)
 
-## Deploy
-This Node app can be deployed as a new service on Render with build command `npm install`, start command `npm start`, and `OPENAI_API_KEY` / `OPENAI_MODEL` configured in the service's environment. Use a NEW repository and NEW Render service; do not reuse any old Nova project.
+Do not put real API keys in `index.html`, commit them to GitHub, or share them in chat. Provider usage may cost money. A working deployment requires a valid API key with access to the selected model.
+
+## Current limitations
+This version implements AI text chat, browser voice input, and spoken replies. Image generation, video generation, image/file understanding, user accounts, and saved cloud chats are not connected yet; the app does not pretend these features are working.
