@@ -19,6 +19,15 @@ header{height:76px;flex-shrink:0;display:flex;align-items:center;justify-content
 #work{color:var(--blue)}
 main{flex:1;min-height:0;overflow:auto;padding:10px 22px 20px;display:flex;flex-direction:column}
 .spacer{flex:1;min-height:35px}
+#voiceHero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;flex:1;min-height:320px;padding:20px 12px 38px}
+#voiceHero[hidden]{display:none}
+.orb{width:112px;height:112px;border-radius:50%;margin-bottom:28px;background:radial-gradient(ellipse at 50% 70%,#dce7ff 0%,#a9c4ff 42%,#5685f4 72%,#315fe9 100%);box-shadow:inset 0 -8px 18px #fff7,0 2px 8px #0001}
+#voiceHero h1{font-size:clamp(25px,5vw,38px);line-height:1.2;margin:0 0 14px;font-weight:700;letter-spacing:-.7px}
+#voiceHero p{font-size:clamp(16px,3.6vw,21px);line-height:1.55;color:#666;max-width:540px;margin:0 0 46px}
+#startVoice{border:0;border-radius:40px;background:#090909;color:#fff;font-size:20px;font-weight:600;padding:17px 42px;min-width:220px}
+#startVoice:active{transform:scale(.98)}
+header{height:84px}
+@media(max-width:420px){header{padding:0 14px}.tabs button{padding:12px 18px}#voiceHero{padding-bottom:30px}.orb{width:104px;height:104px}#voiceHero p{margin-bottom:38px}}
 .suggestions{width:100%;max-width:500px;margin:0 auto 12px;display:flex;flex-direction:column}
 .suggestion{border:0;background:transparent;text-align:left;padding:13px 4px;font-size:17px;color:#626262;display:flex;gap:16px;align-items:center}
 .suggestion span{font-size:25px;width:28px;text-align:center}
@@ -52,6 +61,7 @@ footer{flex-shrink:0;background:#fff;padding:8px 16px calc(12px + env(safe-area-
 
 <main id="main">
 <div class="spacer" id="topSpace"></div>
+<section id="voiceHero" aria-label="Nova voice introduction"><div class="orb" aria-hidden="true"></div><h1>Meet Nova Voice</h1><p>More natural conversations, powered by Nova AI.</p><button id="startVoice">Start Voice</button></section>
 <section class="suggestions" id="suggestions">
 <button class="suggestion" data-prompt="Help me start a voice chat."><span>♧</span>Start a voice chat</button>
 <button class="suggestion" data-prompt="Help me create an image or sticker."><span>▧</span>Create an image or sticker</button>
@@ -94,6 +104,7 @@ function add(role,text,extra=""){
   d.textContent=text;
   $("messages").append(d);
   $("suggestions").style.display="none";
+  $("voiceHero").hidden=true;
   $("topSpace").style.display="none";
   scrollBottom();
   return d;
@@ -104,6 +115,7 @@ function reset(){
   picked.length=0;
   $("messages").replaceChildren();
   $("suggestions").style.display="flex";
+  $("voiceHero").hidden=workMode;
   $("topSpace").style.display="block";
   $("attachInfo").style.display="none";
   $("prompt").value="";
@@ -112,15 +124,18 @@ function reset(){
   $("mic").style.display="grid";
 }
 $("newChat").onclick=reset;
+$("startVoice").onclick=()=>$("mic").click();
 $("menuBtn").onclick=()=>add("assistant","Nova AI menu\nUse the + button to attach a file.");
 $("chatTab").onclick=()=>{
   workMode=false;
+  $("voiceHero").hidden=$("messages").children.length>0;
   $("prompt").placeholder="Ask Nova AI";
   $("chatTab").classList.add("active");
   $("work").classList.remove("active");
 };
 $("work").onclick=()=>{
   workMode=true;
+  $("voiceHero").hidden=true;
   $("prompt").placeholder="Describe an image to generate…";
   $("work").classList.add("active");
   $("chatTab").classList.remove("active");
