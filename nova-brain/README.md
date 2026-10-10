@@ -48,3 +48,29 @@ A quantized Qwen2.5-7B-Instruct GGUF is available for running Nova locally. The 
 - The model itself is roughly 4–5 GB for this Q4_K_M quantization; RAM/VRAM use is higher than the file size and depends on context length and runtime.
 - Do not try to load this 7B model on the existing Render Free web service. Use Colab or a capable local computer instead. The existing Nova website and the old Render app are not changed by this runner.
 - Model availability, repository filenames, Colab GPU access, and package installation can change. This setup has been committed but has not been executed end-to-end in this environment.
+
+
+## Nova image generation
+
+Nova now has a separate Stable Diffusion text-to-image runner in `generate_image.py`. It is separate from the Qwen chat model because chat LLMs do not generate image pixels themselves.
+
+### Run in Google Colab
+
+1. Open https://colab.research.google.com/ and select a GPU runtime if one is available.
+2. Install dependencies:
+
+   `!pip -q install "diffusers[torch]" transformers accelerate safetensors`
+
+3. Clone the project and enter the brain folder:
+
+   `!git clone -b nova-cloud-free https://github.com/ronhalder93/nova-ai-assistant.git`
+
+   `%cd nova-ai-assistant/nova-brain`
+
+4. Generate a sample image:
+
+   `!python generate_image.py --prompt "cinematic fantasy landscape at golden hour, detailed digital art" --output nova.png`
+
+The first run downloads the Stable Diffusion 1.5 checkpoint from Hugging Face and needs several GB of internet data and disk cache. GPU access is recommended; CPU-only generation can be very slow. Downloaded model weights are cached by Hugging Face in the runtime and may need to be downloaded again in a new temporary Colab session.
+
+The script keeps the model's default safety checker enabled. Use it only for lawful content and never create sexual images involving minors or intimate images of real people without their consent. This runner has been committed but has not been run end-to-end in this environment. It is not yet connected to the live Nova website, and it does not change the existing Render services.
