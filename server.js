@@ -100,8 +100,8 @@ app.post("/api/image", async (req, res) => {
     const requestBody = JSON.stringify({
       prompt,
       params: { sampler_name: "k_euler", steps: 20, width: 512, height: 512, n: 1 },
-      nsfw: false,
-      censor_nsfw: true,
+      nsfw: true,
+      censor_nsfw: false,
       trusted_workers: false,
       models: ["stable_diffusion"]
     });
