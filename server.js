@@ -95,7 +95,8 @@ app.post("/api/image", async (req, res) => {
     if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
     const headers = {
       "Content-Type": "application/json",
-      "Client-Agent": "NovaAI:1.0:https://nova-ai-assistant-9rwb.onrender.com"
+      "Client-Agent": "NovaAI:1.0:https://nova-ai-assistant-9rwb.onrender.com",
+      apikey: process.env.AIHORDE_API_KEY || "0000000000"
     };
     const requestBody = JSON.stringify({
       prompt,
@@ -126,7 +127,7 @@ app.post("/api/image", async (req, res) => {
     while (Date.now() < deadline) {
       await new Promise(resolve => setTimeout(resolve, 5000));
       const checkResponse = await fetch("https://aihorde.net/api/v2/generate/check/" + encodeURIComponent(job.id), {
-        headers: { "Client-Agent": headers["Client-Agent"] }
+        headers: { "Client-Agent": headers["Client-Agent"], apikey: headers.apikey }
       });
       const check = await checkResponse.json().catch(() => ({}));
       if (!checkResponse.ok) return res.status(502).json({ error: "Could not check the free image queue. Try again." });
