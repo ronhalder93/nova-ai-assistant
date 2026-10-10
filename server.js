@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
@@ -13,7 +12,9 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     app: "Nova AI Assistant",
     provider: process.env.OPENROUTER_API_KEY ? "OpenRouter" : "Not configured",
-    chatConfigured: Boolean(process.env.OPENROUTER_API_KEY)
+    chatConfigured: Boolean(process.env.OPENROUTER_API_KEY),
+    imageProvider: process.env.POLLINATIONS_API_KEY ? "Pollinations authenticated API" : "Pollinations legacy (limited)",
+    imageConfigured: true
   });
 });
 
@@ -88,37 +89,54 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Alternative free image endpoint via Pollinations legacy API. Availability and anonymous limits may change.
+// Supports the current authenticated Pollinations API. If no key is configured,
+// retain the legacy endpoint as a best-effort fallback; anonymous access is limited.
 app.post("/api/image", async (req, res) => {
   try {
     const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
     if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
 
     const enhancedPrompt = prompt + ", high detail, realistic lighting, clear composition";
-    const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(enhancedPrompt) +
-      "?width=512&height=512&nologo=true";
+    const apiKey = process.env.POLLINATIONS_API_KEY;
+    const url = apiKey
+      ? "https://gen.pollinations.ai/image/" + encodeURIComponent(enhancedPrompt) + "?width=768&height=768&nologo=true"
+      : "https://image.pollinations.ai/prompt/" + encodeURIComponent(enhancedPrompt) + "?width=512&height=512&nologo=true";
+
+    const headers = {
+      "Accept": "image/jpeg,image/png,image/webp",
+      "User-Agent": "NovaAI/1.1"
+    };
+    if (apiKey) headers.Authorization = "Bearer " + apiKey;
+
     const upstream = await fetch(url, {
       method: "GET",
-      headers: { "Accept": "image/jpeg,image/png,image/webp", "User-Agent": "NovaAI/1.0" },
+      headers,
       signal: AbortSignal.timeout(90000)
     });
 
     if (!upstream.ok) {
       const details = await upstream.text().catch(() => "");
       console.error("Pollinations image failed:", upstream.status, details.slice(0, 400));
-      if (upstream.status === 401 || upstream.status === 402 || upstream.status === 403) {
+      if (upstream.status === 401 || upstream.status === 403) {
         return res.status(503).json({
-          error: "Free image provider is currently requiring access or has reached its free limit. No paid service was enabled."
+          error: apiKey
+            ? "Pollinations API key was rejected. Check POLLINATIONS_API_KEY in Render Environment Variables."
+            : "Free image provider requires access. Add a Pollinations API key in Render Environment Variables to use your account's available free credits."
         });
       }
-      return res.status(503).json({ error: "Free image provider is busy or unavailable. Please try again later." });
+      if (upstream.status === 402 || upstream.status === 429) {
+        return res.status(503).json({
+          error: "Pollinations free allowance or rate limit has been reached. No paid service was enabled; try again later or check your free credits."
+        });
+      }
+      return res.status(503).json({ error: "Pollinations is busy or unavailable. Please try again later." });
     }
 
     const contentType = (upstream.headers.get("content-type") || "").toLowerCase();
     if (!contentType.startsWith("image/")) {
       const body = await upstream.text().catch(() => "");
       console.error("Pollinations returned non-image:", contentType, body.slice(0, 300));
-      return res.status(502).json({ error: "The free provider did not return an image. Please try again." });
+      return res.status(502).json({ error: "The image provider did not return an image. Please try again." });
     }
 
     const bytes = Buffer.from(await upstream.arrayBuffer());
