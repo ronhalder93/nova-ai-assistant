@@ -32,8 +32,6 @@ def main():
     pipe = StableDiffusionPipeline.from_pretrained(
         args.model,
         torch_dtype=dtype,
-        safety_checker=None,
-        requires_safety_checker=False,
     )
     pipe = pipe.to(device)
     pipe.enable_attention_slicing()
