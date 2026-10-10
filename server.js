@@ -97,21 +97,29 @@ app.post("/api/image", async (req, res) => {
       "Content-Type": "application/json",
       "Client-Agent": "NovaAI:1.0"
     };
-    const start = await fetch("https://aihorde.net/api/v2/generate/async", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        prompt,
-        params: { sampler_name: "k_euler", steps: 20, width: 512, height: 512, n: 1 },
-        nsfw: false,
-        censor_nsfw: true,
-        trusted_workers: false,
-        models: ["stable_diffusion"]
-      })
+    const requestBody = JSON.stringify({
+      prompt,
+      params: { sampler_name: "k_euler", steps: 20, width: 512, height: 512, n: 1 },
+      nsfw: false,
+      censor_nsfw: true,
+      trusted_workers: false,
+      models: ["stable_diffusion"]
     });
-    const job = await start.json().catch(() => ({}));
-    if (!start.ok || !job.id) {
-      return res.status(502).json({ error: "Free image service is busy. Please try again later." });
+    let job = {};
+    let start;
+    // Retry brief provider overloads automatically; volunteer worker capacity varies.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      start = await fetch("https://aihorde.net/api/v2/generate/async", {
+        method: "POST",
+        headers,
+        body: requestBody
+      });
+      job = await start.json().catch(() => ({}));
+      if (start.ok && job.id) break;
+      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2500));
+    }
+    if (!start?.ok || !job.id) {
+      return res.status(503).json({ error: "Free image workers are busy right now. Nova tried automatically 3 times, but no worker accepted the request. Please try again in a few minutes." });
     }
     const deadline = Date.now() + 120000;
     while (Date.now() < deadline) {
