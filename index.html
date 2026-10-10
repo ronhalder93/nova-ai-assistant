@@ -219,12 +219,20 @@ async function send(){
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
     if(workMode){
-      pending.textContent="";
+      if(typeof data.image!=="string" || !data.image.trim()){
+        throw new Error("The image service returned no usable image. Please try a different prompt.");
+      }
+      pending.replaceChildren();
       const img=document.createElement("img");
-      img.src=data.image;
       img.alt="AI generated image";
       img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px";
       img.onload=()=>scrollBottom();
+      img.onerror=()=>{
+        pending.replaceChildren();
+        pending.textContent="⚠ The image service returned an invalid or blocked image. Try a different, clearly adult and non-explicit prompt.";
+        pending.classList.add("error");
+      };
+      img.src=data.image;
       pending.append(img);
       const link=document.createElement("a");
       link.href=data.image;
