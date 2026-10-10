@@ -56,7 +56,11 @@ Nova now has a separate Stable Diffusion text-to-image runner in `generate_image
 
 ### Run in Google Colab
 
-1. Open https://colab.research.google.com/ and select a GPU runtime if one is available.
+**Ready-to-open notebook:** https://github.com/ronhalder93/nova-ai-assistant/blob/nova-cloud-free/nova-brain/Nova_Image_Generator.ipynb
+
+Open the notebook link, choose **Open in Colab** (or download the notebook and upload it to Colab), and select a GPU runtime if one is available.
+
+Manual setup if you prefer:
 2. Install dependencies:
 
    `!pip -q install "diffusers[torch]" transformers accelerate safetensors`
