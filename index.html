@@ -83,6 +83,7 @@ footer{flex-shrink:0;background:#fff;padding:8px 16px calc(12px + env(safe-area-
 const $=id=>document.getElementById(id);
 const history=[],picked=[];
 let busy=false;
+let workMode=false;
 
 function scrollBottom(){
   $("main").scrollTop=$("main").scrollHeight;
@@ -113,13 +114,17 @@ function reset(){
 $("newChat").onclick=reset;
 $("menuBtn").onclick=()=>add("assistant","Nova AI menu\nUse the + button to attach a file.");
 $("chatTab").onclick=()=>{
+  workMode=false;
+  $("prompt").placeholder="Ask Nova AI";
   $("chatTab").classList.add("active");
   $("work").classList.remove("active");
 };
 $("work").onclick=()=>{
+  workMode=true;
+  $("prompt").placeholder="Describe an image to generate…";
   $("work").classList.add("active");
   $("chatTab").classList.remove("active");
-  add("assistant","Work mode selected. What would you like help with?");
+  add("assistant","Free Image Generator is ready. Describe the image you want. Generation may take time because it uses community workers.");
 };
 $("plus").onclick=()=>{
   $("fileMenu").style.display=$("fileMenu").style.display==="block"?"none":"block";
@@ -192,16 +197,32 @@ async function send(){
   const pending=add("assistant","Nova is thinking…");
   busy=true;
   try{
-    const r=await fetch("/api/chat",{
+    const r=await fetch(workMode?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({messages:history})
+      body:JSON.stringify(workMode?{prompt:text}:{messages:history})
     });
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
-    const reply=String(data.reply||"No reply received.");
-    pending.textContent=reply;
-    history.push({role:"assistant",content:reply});
+    if(workMode){
+      pending.textContent="";
+      const img=document.createElement("img");
+      img.src=data.image;
+      img.alt="AI generated image";
+      img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px";
+      img.onload=()=>scrollBottom();
+      pending.append(img);
+      const link=document.createElement("a");
+      link.href=data.image;
+      link.download="nova-ai-image.png";
+      link.textContent="Download image";
+      link.style.cssText="display:block;margin-top:10px;color:#315fe9";
+      pending.append(link);
+    }else{
+      const reply=String(data.reply||"No reply received.");
+      pending.textContent=reply;
+      history.push({role:"assistant",content:reply});
+    }
   }catch(e){
     pending.textContent="⚠ "+e.message;
     pending.classList.add("error");
