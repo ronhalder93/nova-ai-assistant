@@ -88,64 +88,48 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Free community image generation through AI Horde; queue times depend on volunteer workers.
+// Alternative free image endpoint via Pollinations legacy API. Availability and anonymous limits may change.
 app.post("/api/image", async (req, res) => {
   try {
     const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
     if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
-    const headers = {
-      "Content-Type": "application/json",
-      "Client-Agent": "NovaAI:1.0:https://nova-ai-assistant-9rwb.onrender.com",
-      apikey: process.env.AIHORDE_API_KEY || "0000000000"
-    };
-    const requestBody = JSON.stringify({
-      prompt,
-      params: { sampler_name: "k_euler", steps: 20, width: 512, height: 512, n: 1 },
-      nsfw: true,
-      censor_nsfw: false,
-      trusted_workers: false,
+
+    const enhancedPrompt = prompt + ", high detail, realistic lighting, clear composition";
+    const url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(enhancedPrompt) +
+      "?width=512&height=512&nologo=true";
+    const upstream = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "image/jpeg,image/png,image/webp", "User-Agent": "NovaAI/1.0" },
+      signal: AbortSignal.timeout(90000)
     });
-    let job = {};
-    let start;
-    // Retry brief provider overloads automatically; volunteer worker capacity varies.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      start = await fetch("https://aihorde.net/api/v2/generate/async", {
-        method: "POST",
-        headers,
-        body: requestBody
-      });
-      job = await start.json().catch(() => ({}));
-      if (start.ok && job.id) break;
-      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2500));
-    }
-    if (!start?.ok || !job.id) {
-      console.error("AI Horde submit failed:", start?.status, JSON.stringify(job).slice(0, 800));
-      const detail = typeof job.message === "string" ? job.message : (typeof job.error === "string" ? job.error : "The free image service rejected the request.");
-      return res.status(503).json({ error: "Image service error (" + (start?.status || "no response") + "): " + detail });
-    }
-    const deadline = Date.now() + 120000;
-    while (Date.now() < deadline) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      const checkResponse = await fetch("https://aihorde.net/api/v2/generate/check/" + encodeURIComponent(job.id), {
-        headers: { "Client-Agent": headers["Client-Agent"], apikey: headers.apikey }
-      });
-      const check = await checkResponse.json().catch(() => ({}));
-      if (!checkResponse.ok) return res.status(502).json({ error: "Could not check the free image queue. Try again." });
-      if (check.faulted) return res.status(502).json({ error: "No free worker could complete this image. Try again later." });
-      if (check.done) {
-        const resultResponse = await fetch("https://aihorde.net/api/v2/generate/status/" + encodeURIComponent(job.id), {
-          headers: { "Client-Agent": headers["Client-Agent"] }
+
+    if (!upstream.ok) {
+      const details = await upstream.text().catch(() => "");
+      console.error("Pollinations image failed:", upstream.status, details.slice(0, 400));
+      if (upstream.status === 401 || upstream.status === 402 || upstream.status === 403) {
+        return res.status(503).json({
+          error: "Free image provider is currently requiring access or has reached its free limit. No paid service was enabled."
         });
-        const result = await resultResponse.json().catch(() => ({}));
-        const generation = result.generations && result.generations[0];
-        if (generation && generation.img) return res.json({ image: generation.img });
-        return res.status(502).json({ error: "The service returned no image. Try again." });
       }
+      return res.status(503).json({ error: "Free image provider is busy or unavailable. Please try again later." });
     }
-    return res.status(504).json({ error: "Free image queue is taking too long. Try again later." });
+
+    const contentType = (upstream.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.startsWith("image/")) {
+      const body = await upstream.text().catch(() => "");
+      console.error("Pollinations returned non-image:", contentType, body.slice(0, 300));
+      return res.status(502).json({ error: "The free provider did not return an image. Please try again." });
+    }
+
+    const bytes = Buffer.from(await upstream.arrayBuffer());
+    if (!bytes.length || bytes.length > 12 * 1024 * 1024) {
+      return res.status(502).json({ error: "The image result was empty or too large. Please try again." });
+    }
+    const mime = contentType.split(";")[0] || "image/jpeg";
+    return res.json({ image: "data:" + mime + ";base64," + bytes.toString("base64") });
   } catch (error) {
-    console.error("Image generation error:", error.message);
-    return res.status(500).json({ error: "Free image generation is temporarily unavailable." });
+    console.error("Pollinations image error:", error.message);
+    return res.status(503).json({ error: "Free image generation is temporarily unavailable. Please try again later." });
   }
 });
 
