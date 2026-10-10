@@ -1,121 +1,244 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Nova AI</title>
 <style>
-#novaPlusMenu {
-  display: none;
-  position: absolute;
-  bottom: 55px;
-  left: 0;
-  width: 230px;
-  padding: 8px;
-  background: #202636;
-  border: 1px solid #454d65;
-  border-radius: 16px;
-  z-index: 9999;
-  box-shadow: 0 8px 25px #0008;
-}
-#novaPlusMenu button {
-  display: block;
-  width: 100%;
-  padding: 13px;
-  margin: 2px 0;
-  color: white;
-  background: transparent;
-  border: 0;
-  border-radius: 9px;
-  text-align: left;
-  font-size: 15px;
-}
-#novaPlusMenu button:active { background: #393f56; }
-#novaPlus { font-size: 24px; cursor: pointer; }
-#novaAttachment {
-  display: none;
-  color: #c9c0ff;
-  font-size: 12px;
-  padding: 6px;
-}
+:root{color-scheme:light;--text:#171717;--muted:#666;--blue:#315fe9}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,system-ui,sans-serif;background:#fff;color:var(--text)}
+body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+header{height:76px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
+.round{width:48px;height:48px;border:0;border-radius:50%;background:#f7f7f7;font-size:25px;display:grid;place-items:center}
+.tabs{display:flex;align-items:center;background:#ececec;padding:5px;border-radius:36px}
+.tabs button{border:0;border-radius:30px;background:transparent;padding:12px 22px;font-size:16px}
+.tabs button.active{background:#fff;box-shadow:0 1px 5px #0001}
+#work{color:var(--blue)}
+main{flex:1;min-height:0;overflow:auto;padding:10px 22px 20px;display:flex;flex-direction:column}
+.spacer{flex:1;min-height:35px}
+.suggestions{width:100%;max-width:500px;margin:0 auto 12px;display:flex;flex-direction:column}
+.suggestion{border:0;background:transparent;text-align:left;padding:13px 4px;font-size:17px;color:#626262;display:flex;gap:16px;align-items:center}
+.suggestion span{font-size:25px;width:28px;text-align:center}
+#messages{width:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding:8px 0 22px}
+.msg{padding:12px 15px;border-radius:20px;max-width:90%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:16px}
+.user{align-self:flex-end;background:#f0f0f0}
+.assistant{align-self:flex-start;background:#fff}
+.error{color:#b42318}
+footer{flex-shrink:0;background:#fff;padding:8px 16px calc(12px + env(safe-area-inset-bottom))}
+.composer{position:relative;display:flex;align-items:center;gap:8px;border-radius:38px;background:#f5f5f5;padding:8px 10px;max-width:850px;margin:auto;min-height:66px}
+#prompt{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;font:16px Arial,system-ui;color:#111;max-height:120px;padding:10px 2px}
+.icon{border:0;background:transparent;color:#111;width:42px;height:44px;flex-shrink:0;font-size:27px;display:grid;place-items:center}
+.voice{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-size:25px}
+#send{display:none}
+#fileMenu{display:none;position:absolute;left:0;bottom:76px;width:min(285px,85vw);background:#fff;border:1px solid #e5e5e5;border-radius:18px;padding:7px;box-shadow:0 8px 35px #0002;z-index:5}
+#fileMenu button{display:block;width:100%;padding:13px 12px;border:0;background:white;border-radius:11px;text-align:left;font-size:15px;color:#222}
+#attachInfo{display:none;max-width:850px;margin:0 auto 8px;color:#555;font-size:13px;padding:0 10px;overflow-wrap:anywhere}
+.note{text-align:center;color:#777;font-size:11px;margin-top:8px}
+@media(min-width:700px){main{padding-left:30px;padding-right:30px}}
 </style>
+</head>
+<body>
+<header>
+<button class="round" id="menuBtn">☰</button>
+<div class="tabs">
+<button id="chatTab" class="active">Chat</button>
+<button id="work">✦ Work</button>
+</div>
+<button class="round" id="newChat">◌</button>
+</header>
+
+<main id="main">
+<div class="spacer" id="topSpace"></div>
+<section class="suggestions" id="suggestions">
+<button class="suggestion" data-prompt="Help me start a voice chat."><span>♧</span>Start a voice chat</button>
+<button class="suggestion" data-prompt="Help me create an image or sticker."><span>▧</span>Create an image or sticker</button>
+<button class="suggestion" data-prompt="Help me write or edit something."><span>✎</span>Write or edit</button>
+</section>
+<section id="messages" aria-live="polite"></section>
+</main>
+
+<footer>
+<div id="attachInfo"></div>
+<div class="composer" id="composer">
+<div id="fileMenu">
+<button data-kind="image">▧　Upload image from gallery</button>
+<button data-kind="camera">📷　Take a photo</button>
+<button data-kind="document">📎　Upload PDF or document</button>
+<button data-kind="text">📝　Upload TXT / CSV</button>
+<button data-kind="any">📁　Choose any file</button>
+</div>
+<input id="fileInput" type="file" hidden>
+<button class="icon" id="plus" aria-label="Upload files">＋</button>
+<textarea id="prompt" rows="1" placeholder="Ask Nova AI" aria-label="Message Nova AI"></textarea>
+<button class="icon" id="mic" aria-label="Voice input">♩</button>
+<button class="icon voice" id="send" aria-label="Send">↑</button>
+</div>
+<div class="note">AI can make mistakes. Verify important information.</div>
+</footer>
 
 <script>
-(function () {
-  const composer = document.querySelector(".composer");
-  if (!composer || document.getElementById("novaPlus")) return;
+const $=id=>document.getElementById(id);
+const history=[],picked=[];
+let busy=false;
 
-  const plus = document.createElement("button");
-  plus.id = "novaPlus";
-  plus.className = "iconbtn";
-  plus.type = "button";
-  plus.textContent = "+";
-  plus.setAttribute("aria-label", "Upload options");
+function scrollBottom(){
+  $("main").scrollTop=$("main").scrollHeight;
+}
+function add(role,text,extra=""){
+  const d=document.createElement("div");
+  d.className="msg "+role+(extra?" "+extra:"");
+  d.textContent=text;
+  $("messages").append(d);
+  $("suggestions").style.display="none";
+  $("topSpace").style.display="none";
+  scrollBottom();
+  return d;
+}
+function reset(){
+  if(busy)return;
+  history.length=0;
+  picked.length=0;
+  $("messages").replaceChildren();
+  $("suggestions").style.display="flex";
+  $("topSpace").style.display="block";
+  $("attachInfo").style.display="none";
+  $("prompt").value="";
+  $("fileMenu").style.display="none";
+  $("send").style.display="none";
+  $("mic").style.display="grid";
+}
+$("newChat").onclick=reset;
+$("menuBtn").onclick=()=>add("assistant","Nova AI menu\nUse the + button to attach a file.");
+$("chatTab").onclick=()=>{
+  $("chatTab").classList.add("active");
+  $("work").classList.remove("active");
+};
+$("work").onclick=()=>{
+  $("work").classList.add("active");
+  $("chatTab").classList.remove("active");
+  add("assistant","Work mode selected. What would you like help with?");
+};
+$("plus").onclick=()=>{
+  $("fileMenu").style.display=$("fileMenu").style.display==="block"?"none":"block";
+};
 
-  const menu = document.createElement("div");
-  menu.id = "novaPlusMenu";
-  menu.innerHTML = `
-    <button data-type="image">🖼️ Upload image</button>
-    <button data-type="camera">📷 Take photo</button>
-    <button data-type="file">📎 Upload PDF / file</button>
-    <button data-type="text">📝 Upload TXT / CSV</button>
-  `;
+$("fileMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  const kind=b.dataset.kind,f=$("fileInput");
+  f.removeAttribute("capture");
+  f.accept=kind==="image"?"image/*":
+    kind==="camera"?"image/*":
+    kind==="document"?".pdf,.doc,.docx,.odt":
+    kind==="text"?".txt,.md,.csv,.json":"*/*";
+  if(kind==="camera")f.setAttribute("capture","environment");
+  f.value="";
+  $("fileMenu").style.display="none";
+  f.click();
+});
 
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*,.pdf,.txt,.md,.csv";
-  input.hidden = true;
-
-  const preview = document.createElement("div");
-  preview.id = "novaAttachment";
-
-  composer.style.position = "relative";
-  composer.prepend(plus, menu, input);
-  composer.insertAdjacentElement("beforebegin", preview);
-
-  let selectedFile = null;
-
-  plus.onclick = () => {
-    menu.style.display =
-      menu.style.display === "block" ? "none" : "block";
-  };
-
-  menu.querySelectorAll("button").forEach(button => {
-    button.onclick = () => {
-      menu.style.display = "none";
-      const type = button.dataset.type;
-
-      input.removeAttribute("capture");
-      if (type === "image") input.accept = "image/*";
-      if (type === "camera") {
-        input.accept = "image/*";
-        input.setAttribute("capture", "environment");
-      }
-      if (type === "file") input.accept = ".pdf,.txt,.md,.csv";
-      if (type === "text") input.accept = ".txt,.md,.csv";
-
-      input.click();
-    };
-  });
-
-  input.onchange = () => {
-    const file = input.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Please select a file under 5 MB.");
-      input.value = "";
-      return;
+$("fileInput").onchange=async()=>{
+  const f=$("fileInput").files[0];
+  if(!f)return;
+  if(f.size>5*1024*1024){
+    add("assistant","Please choose a file smaller than 5 MB.","error");
+    return;
+  }
+  const item={name:f.name,text:"",isImage:f.type.startsWith("image/")};
+  try{
+    if(/\.(txt|md|csv|json)$/i.test(f.name)||f.type.startsWith("text/")){
+      item.text=(await f.text()).slice(0,18000);
+    }else if(/\.pdf$/i.test(f.name)){
+      item.text="PDF selected: "+f.name+". PDF text extraction is not enabled in this version.";
+    }else if(item.isImage){
+      item.text="Image selected: "+f.name+". Image understanding requires a vision-enabled backend.";
+    }else{
+      item.text="File selected: "+f.name+". Automatic reading is not enabled for this file type.";
     }
+    picked.push(item);
+    $("attachInfo").style.display="block";
+    $("attachInfo").textContent="📎 "+picked.map(x=>x.name).join(" · ");
+    $("prompt").focus();
+  }catch(e){
+    add("assistant","Could not read that file. Try another file.","error");
+  }
+};
 
-    selectedFile = file;
-    preview.style.display = "block";
-    preview.textContent =
-      "📎 " + file.name + " — tap here to remove";
+$("prompt").addEventListener("input",()=>{
+  const has=$("prompt").value.trim().length>0;
+  $("send").style.display=has?"grid":"none";
+  $("mic").style.display=has?"none":"grid";
+  $("prompt").style.height="auto";
+  $("prompt").style.height=Math.min($("prompt").scrollHeight,120)+"px";
+});
+
+async function send(){
+  if(busy)return;
+  let text=$("prompt").value.trim();
+  const fileContext=picked.length?
+    picked.map(f=>"[Attached file: "+f.name+"]\n"+(f.text||"(No readable text extracted)")).join("\n\n"):"";
+  if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;
+  if(!text)return;
+
+  const displayText=$("prompt").value.trim()+
+    (picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");
+  $("prompt").value="";
+  $("prompt").style.height="auto";
+  $("send").style.display="none";
+  $("mic").style.display="grid";
+  add("user",displayText);
+  history.push({role:"user",content:text});
+  const pending=add("assistant","Nova is thinking…");
+  busy=true;
+  try{
+    const r=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({messages:history})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(data.error||"Could not get a reply.");
+    const reply=String(data.reply||"No reply received.");
+    pending.textContent=reply;
+    history.push({role:"assistant",content:reply});
+  }catch(e){
+    pending.textContent="⚠ "+e.message;
+    pending.classList.add("error");
+    history.pop();
+  }finally{
+    busy=false;
+    scrollBottom();
+  }
+}
+$("send").onclick=send;
+$("prompt").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
+document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{
+  $("prompt").value=b.dataset.prompt;
+  $("prompt").dispatchEvent(new Event("input"));
+  send();
+});
+$("mic").onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    add("assistant","Voice input is not supported in this browser. Try Chrome on Android.");
+    return;
+  }
+  const rec=new SR();
+  rec.lang=navigator.language||"en-US";
+  rec.onresult=e=>{
+    $("prompt").value=e.results[0][0].transcript;
+    $("prompt").dispatchEvent(new Event("input"));
   };
-
-  preview.onclick = () => {
-    selectedFile = null;
-    input.value = "";
-    preview.style.display = "none";
-  };
-
-  // Make the selected attachment available to your chat code.
-  window.getNovaSelectedFile = () => selectedFile;
-})();
+  rec.onerror=()=>add("assistant","Could not hear that. Please try again.");
+  rec.start();
+};
+fetch("/api/health").then(r=>r.json()).catch(()=>null);
 </script>
+</body>
+</html>
