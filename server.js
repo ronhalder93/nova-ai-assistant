@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -12,65 +13,122 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     app: "Nova AI Assistant",
-    chatConfigured: Boolean(process.env.OPENAI_API_KEY)
+    provider: process.env.HF_TOKEN ? "Hugging Face" : "Not configured",
+    chatConfigured: Boolean(process.env.HF_TOKEN)
   });
 });
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    const token = process.env.HF_TOKEN;
+
+    if (!token) {
       return res.status(503).json({
-        error: "Nova AI is installed, but AI chat needs an API key. Add OPENAI_API_KEY in your hosting Environment settings."
+        error: "HF_TOKEN is missing in Render Environment Variables."
       });
     }
 
-    const incoming = Array.isArray(req.body?.messages) ? req.body.messages : [];
+    const incoming = Array.isArray(req.body?.messages)
+      ? req.body.messages
+      : [];
+
     const messages = incoming
-      .filter(m => m && ["user", "assistant"].includes(m.role) && typeof m.content === "string")
-      .slice(-24)
-      .map(m => ({ role: m.role, content: m.content.slice(0, 10000) }));
+      .filter(
+        m =>
+          m &&
+          ["user", "assistant"].includes(m.role) &&
+          typeof m.content === "string"
+      )
+      .slice(-20)
+      .map(m => ({
+        role: m.role,
+        content: m.content.slice(0, 8000)
+      }));
 
     if (!messages.length || !messages.some(m => m.role === "user")) {
-      return res.status(400).json({ error: "Pehle apna message likho." });
+      return res.status(400).json({
+        error: "Please enter a message first."
+      });
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are Nova AI, a helpful, friendly AI assistant. Respond in the language the user uses. Be clear and honest. Do not claim to have performed actions you did not perform. If a user mentions images, videos, file analysis, or other features that are not connected, explain that honestly."
-          },
-          ...messages
-        ],
-        temperature: 0.7
-      })
-    });
+    const model =
+      process.env.HF_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+
+    const response = await fetch(
+      "https://router.huggingface.co/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are Nova AI Assistant. Be helpful, honest, and friendly. Reply in the language the user uses."
+            },
+            ...messages
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      }
+    );
 
     const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const status = response.status === 401 || response.status === 403 ? 502 : 502;
-      console.error("AI provider returned HTTP", response.status);
-      return res.status(status).json({
-        error: data?.error?.message || "AI provider request failed. Check the API key, model access, and provider billing."
+      console.error("Hugging Face HTTP status:", response.status);
+
+      if (response.status === 401 || response.status === 403) {
+        return res.status(502).json({
+          error: "Hugging Face token invalid or missing required permission."
+        });
+      }
+
+      if (
+        response.status === 402 ||
+        /credit|billing|payment/i.test(
+          JSON.stringify(data.error || data)
+        )
+      ) {
+        return res.status(502).json({
+          error: "This model/provider requires credits or billing. Check Hugging Face Inference Providers usage."
+        });
+      }
+
+      if (response.status === 429) {
+        return res.status(502).json({
+          error: "Hugging Face rate limit reached. Please try again later."
+        });
+      }
+
+      return res.status(502).json({
+        error:
+          data?.error?.message ||
+          data?.error ||
+          "Hugging Face request failed. Try an available model."
       });
     }
 
     const reply = data?.choices?.[0]?.message?.content;
+
     if (typeof reply !== "string" || !reply.trim()) {
-      return res.status(502).json({ error: "AI provider returned an empty reply. Please try again." });
+      return res.status(502).json({
+        error: "The AI provider returned an empty reply."
+      });
     }
+
     return res.json({ reply: reply.trim() });
   } catch (error) {
-    console.error("Chat request failed:", error.message);
-    return res.status(500).json({ error: "Server error. Please check the hosting logs and try again." });
+    console.error("Chat server error:", error.message);
+
+    return res.status(500).json({
+      error: "Server error. Check Render logs and try again."
+    });
   }
 });
 
@@ -79,6 +137,7 @@ app.get("*", (_req, res) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
+
 app.listen(port, "0.0.0.0", () => {
   console.log(`Nova AI Assistant listening on port ${port}`);
 });
