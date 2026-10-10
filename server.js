@@ -88,6 +88,57 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// Free community image generation through AI Horde; queue times depend on volunteer workers.
+app.post("/api/image", async (req, res) => {
+  try {
+    const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
+    if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
+    const headers = {
+      "Content-Type": "application/json",
+      "Client-Agent": "NovaAI:1.0"
+    };
+    const start = await fetch("https://aihorde.net/api/v2/generate/async", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        prompt,
+        params: { sampler_name: "k_euler", steps: 20, width: 512, height: 512, n: 1 },
+        nsfw: false,
+        censor_nsfw: true,
+        trusted_workers: false,
+        models: ["stable_diffusion"]
+      })
+    });
+    const job = await start.json().catch(() => ({}));
+    if (!start.ok || !job.id) {
+      return res.status(502).json({ error: "Free image service is busy. Please try again later." });
+    }
+    const deadline = Date.now() + 120000;
+    while (Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      const checkResponse = await fetch("https://aihorde.net/api/v2/generate/check/" + encodeURIComponent(job.id), {
+        headers: { "Client-Agent": headers["Client-Agent"] }
+      });
+      const check = await checkResponse.json().catch(() => ({}));
+      if (!checkResponse.ok) return res.status(502).json({ error: "Could not check the free image queue. Try again." });
+      if (check.faulted) return res.status(502).json({ error: "No free worker could complete this image. Try again later." });
+      if (check.done) {
+        const resultResponse = await fetch("https://aihorde.net/api/v2/generate/status/" + encodeURIComponent(job.id), {
+          headers: { "Client-Agent": headers["Client-Agent"] }
+        });
+        const result = await resultResponse.json().catch(() => ({}));
+        const generation = result.generations && result.generations[0];
+        if (generation && generation.img) return res.json({ image: generation.img });
+        return res.status(502).json({ error: "The service returned no image. Try again." });
+      }
+    }
+    return res.status(504).json({ error: "Free image queue is taking too long. Try again later." });
+  } catch (error) {
+    console.error("Image generation error:", error.message);
+    return res.status(500).json({ error: "Free image generation is temporarily unavailable." });
+  }
+});
+
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
