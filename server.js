@@ -95,7 +95,7 @@ app.post("/api/image", async (req, res) => {
     if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
     const headers = {
       "Content-Type": "application/json",
-      "Client-Agent": "NovaAI:1.0"
+      "Client-Agent": "NovaAI:1.0:https://nova-ai-assistant-9rwb.onrender.com"
     };
     const requestBody = JSON.stringify({
       prompt,
@@ -103,7 +103,6 @@ app.post("/api/image", async (req, res) => {
       nsfw: true,
       censor_nsfw: false,
       trusted_workers: false,
-      models: ["stable_diffusion"]
     });
     let job = {};
     let start;
@@ -119,7 +118,9 @@ app.post("/api/image", async (req, res) => {
       if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2500));
     }
     if (!start?.ok || !job.id) {
-      return res.status(503).json({ error: "Free image workers are busy right now. Nova tried automatically 3 times, but no worker accepted the request. Please try again in a few minutes." });
+      console.error("AI Horde submit failed:", start?.status, JSON.stringify(job).slice(0, 800));
+      const detail = typeof job.message === "string" ? job.message : (typeof job.error === "string" ? job.error : "The free image service rejected the request.");
+      return res.status(503).json({ error: "Image service error (" + (start?.status || "no response") + "): " + detail });
     }
     const deadline = Date.now() + 120000;
     while (Date.now() < deadline) {
