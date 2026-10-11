@@ -123,8 +123,9 @@ app.post("/api/image", async (req, res) => {
     const rawPrompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
     if (!rawPrompt) return res.status(400).json({ error: "Enter an image prompt first." });
 
-    // --- IMAGE SAFETY FILTER BYPASS WRAPPER ---
-    const prompt = `Cinematic artistic composition, high quality masterpiece concept art, representing: ${rawPrompt}`;
+    // Preserve the user’s prompt instead of forcing an extra style prefix.
+    // Provider-level content policies still apply to the selected image service.
+    const prompt = rawPrompt;
 
     const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\/$/, "");
     const comfyCheckpoint = process.env.COMFYUI_CHECKPOINT;
