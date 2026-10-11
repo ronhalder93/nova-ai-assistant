@@ -71,6 +71,17 @@ header{height:84px}
 </main>
 
 <footer>
+<div id="chatSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa">
+<div style="font-weight:700;margin-bottom:10px">Nova owner controls</div>
+<label style="display:block;font-size:13px;margin:8px 0 4px">OpenRouter model ID</label>
+<input id="chatModel" value="openrouter/free" placeholder="e.g. openrouter/free or provider/model" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white">
+<label style="display:block;font-size:13px;margin:8px 0 4px">Creativity <span id="tempValue">0.8</span></label>
+<input id="chatTemperature" type="range" min="0" max="1.5" step="0.1" value="0.8" style="width:100%">
+<label style="display:block;font-size:13px;margin:8px 0 4px">Maximum response tokens</label>
+<select id="chatTokens" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="500">500 — short</option><option value="1500" selected>1500 — balanced</option><option value="2500">2500 — detailed</option><option value="4000">4000 — long</option></select>
+<label style="display:block;font-size:13px;margin:8px 0 4px">Custom instructions</label>
+<textarea id="chatInstructions" rows="3" maxlength="2000" placeholder="Tone, format, role, preferences…" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white;resize:vertical"></textarea>
+<div style="font-size:12px;color:#666;margin-top:8px">Settings apply to chat requests from this browser. API keys stay on the server. Provider safety policies still apply.</div></div>
 <div id="imageSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa">
 <div style="font-weight:700;margin-bottom:10px">Image controls</div>
 <label style="display:block;font-size:13px;margin:8px 0 4px">Style</label>
@@ -139,12 +150,13 @@ function reset(){
 }
 $("newChat").onclick=reset;
 $("startVoice").onclick=()=>$("mic").click();
-$("menuBtn").onclick=()=>add("assistant","Nova AI menu\nUse the + button to attach a file.");
+$("menuBtn").onclick=()=>{const panel=$("chatSettings");panel.hidden=!panel.hidden;if(!panel.hidden)$("imageSettings").hidden=true;};
 $("chatTab").onclick=()=>{
   workMode=false;
   $("voiceHero").hidden=$("messages").children.length>0;
   $("prompt").placeholder="Ask Nova AI";
   $("imageSettings").hidden=true;
+  $("chatSettings").hidden=true;
   $("chatTab").classList.add("active");
   $("work").classList.remove("active");
 };
@@ -153,6 +165,7 @@ $("work").onclick=()=>{
   $("voiceHero").hidden=true;
   $("prompt").placeholder="Describe an image to generate…";
   $("imageSettings").hidden=false;
+  $("chatSettings").hidden=true;
   $("work").classList.add("active");
   $("chatTab").classList.remove("active");
 };
@@ -230,7 +243,7 @@ async function send(){
     const r=await fetch(workMode?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(workMode?{prompt:text,style:$("imageStyle").value,aspectRatio:$("imageRatio").value,negativePrompt:$("negativePrompt").value}:{messages:history})
+      body:JSON.stringify(workMode?{prompt:text,style:$("imageStyle").value,aspectRatio:$("imageRatio").value,negativePrompt:$("negativePrompt").value}:{messages:history,settings:{model:$("chatModel").value,temperature:Number($("chatTemperature").value),maxTokens:Number($("chatTokens").value),instructions:$("chatInstructions").value}})
     });
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
@@ -303,6 +316,7 @@ $("mic").onclick=()=>{
   rec.onerror=()=>add("assistant","Could not hear that. Please try again.");
   rec.start();
 };
+$("chatTemperature").addEventListener("input",()=>{$("tempValue").textContent=$("chatTemperature").value;});
 fetch("/api/health").then(r=>r.json()).catch(()=>null);
 </script>
 </body>
