@@ -85,7 +85,7 @@ app.post("/api/image", async (req, res) => {
     }
 
     // Keep existing provider as a fallback until Cloudflare credentials are configured.
-    const enhancedPrompt = prompt + ", high detail, realistic lighting, clear composition";
+    const enhancedPrompt = "Create an original, high-quality 3D visual-novel game render. Detailed realistic 3D character design, expressive faces, natural anatomy, carefully rendered hair and fabric, cinematic soft lighting, rich environment details, polished game-art finish, clear composition. Every person depicted must be a fictional adult aged 25 or older. Use the user prompt for the character appearance, outfit, pose, expression, and location; vary characters freely unless the user asks otherwise. Romantic or mature atmosphere may be included when requested, but keep sexual content non-explicit. Do not reproduce exact copyrighted game characters or assets. User scene: " + prompt;
     const apiKey = process.env.POLLINATIONS_API_KEY;
     const url = apiKey
       ? "https://gen.pollinations.ai/image/" + encodeURIComponent(enhancedPrompt) + "?width=768&height=768&nologo=true"
