@@ -32,7 +32,9 @@ app.post("/api/chat", async (req, res) => {
     // User-configurable behavior controls. Provider safety policies remain in force.
     const settings = req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : {};
     const requestedModel = typeof settings.model === "string" ? settings.model.trim().slice(0, 120) : "";
-    const model = requestedModel && /^[a-zA-Z0-9._:/-]+$/.test(requestedModel) ? requestedModel : (process.env.NOVA_CHAT_MODEL || "openrouter/free");
+    const isFreeModel = value => value === "openrouter/free" || /^[a-zA-Z0-9._/-]+:free$/.test(value);
+    const configuredModel = (process.env.NOVA_CHAT_MODEL || "").trim();
+    const model = requestedModel && /^[a-zA-Z0-9._:/-]+$/.test(requestedModel) && isFreeModel(requestedModel) ? requestedModel : (isFreeModel(configuredModel) ? configuredModel : "openrouter/free");
     const temperature = Number.isFinite(Number(settings.temperature)) ? Math.min(1.5, Math.max(0, Number(settings.temperature))) : 0.8;
     const maxTokens = Number.isFinite(Number(settings.maxTokens)) ? Math.min(4000, Math.max(100, Math.round(Number(settings.maxTokens)))) : 1500;
     const customInstructions = typeof settings.instructions === "string" ? settings.instructions.trim().slice(0, 2000) : "";
@@ -52,8 +54,8 @@ app.post("/api/chat", async (req, res) => {
           { role: "system", content: systemPrompt }, 
           ...messages
         ], 
-        temperature: 0.9, 
-        max_tokens: 1500 
+        temperature, 
+        max_tokens: maxTokens 
       })
     });
 
