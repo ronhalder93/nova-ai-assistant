@@ -125,18 +125,22 @@ app.post("/api/image", async (req, res) => {
 
     // Preserve the user’s prompt instead of forcing an extra style prefix.
     // Provider-level content policies still apply to the selected image service.
-    const prompt = rawPrompt;
+    const style = typeof req.body?.style === "string" ? req.body.style.trim().slice(0, 40) : "";
+    const negativePrompt = typeof req.body?.negativePrompt === "string" ? req.body.negativePrompt.trim().slice(0, 500) : "";
+    const aspectRatio = ["square", "portrait", "landscape"].includes(req.body?.aspectRatio) ? req.body.aspectRatio : "square";
+    const prompt = style ? rawPrompt + ", style: " + style : rawPrompt;
+    const dimensions = aspectRatio === "portrait" ? { width: 768, height: 1024 } : aspectRatio === "landscape" ? { width: 1024, height: 768 } : { width: 768, height: 768 };
 
     const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\/$/, "");
     const comfyCheckpoint = process.env.COMFYUI_CHECKPOINT;
     if (comfyUrl && comfyCheckpoint) {
       const positive = prompt;
-      const negative = "low quality, blurry, pixelated";
+      const negative = ["low quality, blurry, pixelated", negativePrompt].filter(Boolean).join(", ");
       const workflow = {
         "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: comfyCheckpoint } },
         "2": { class_type: "CLIPTextEncode", inputs: { text: positive, clip: ["1", 1] } },
         "3": { class_type: "CLIPTextEncode", inputs: { text: negative, clip: ["1", 1] } },
-        "4": { class_type: "EmptyLatentImage", inputs: { width: 768, height: 1024, batch_size: 1 } },
+        "4": { class_type: "EmptyLatentImage", inputs: { width: dimensions.width, height: dimensions.height, batch_size: 1 } },
         "5": { class_type: "KSampler", inputs: { seed: Math.floor(Math.random() * 2147483647), steps: 24, cfg: 7, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 1, model: ["1", 0], positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0] } },
         "6": { class_type: "VAEDecode", inputs: { samples: ["5", 0], vae: ["1", 2] } },
         "7": { class_type: "SaveImage", inputs: { filename_prefix: "nova", images: ["6", 0] } }
@@ -181,7 +185,7 @@ app.post("/api/image", async (req, res) => {
       const upstream = await fetch(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${cfToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, num_steps: 4 }),
+        body: JSON.stringify({ prompt: negativePrompt ? prompt + ". Avoid: " + negativePrompt : prompt, num_steps: 4 }),
         signal: AbortSignal.timeout(90000)
       });
       const type = (upstream.headers.get("content-type") || "").toLowerCase();
@@ -201,8 +205,8 @@ app.post("/api/image", async (req, res) => {
     const enhancedPrompt = prompt;
     const apiKey = process.env.POLLINATIONS_API_KEY;
     const url = apiKey
-      ? "https://gen.pollinations.ai/image/" + encodeURIComponent(enhancedPrompt) + "?width=768&height=768&nologo=true"
-      : "https://image.pollinations.ai/prompt/" + encodeURIComponent(enhancedPrompt) + "?width=512&height=512&nologo=true";
+      ? "https://gen.pollinations.ai/image/" + encodeURIComponent(negativePrompt ? enhancedPrompt + ". Avoid: " + negativePrompt : enhancedPrompt) + "?width=" + dimensions.width + "&height=" + dimensions.height + "&nologo=true"
+      : "https://image.pollinations.ai/prompt/" + encodeURIComponent(negativePrompt ? enhancedPrompt + ". Avoid: " + negativePrompt : enhancedPrompt) + "?width=" + dimensions.width + "&height=" + dimensions.height + "&nologo=true";
     const headers = { Accept: "image/jpeg,image/png,image/webp", "User-Agent": "NovaAI/1.2" };
     if (apiKey) headers.Authorization = "Bearer " + apiKey;
     const upstream = await fetch(url, { method: "GET", headers, signal: AbortSignal.timeout(90000) });
