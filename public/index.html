@@ -71,6 +71,15 @@ header{height:84px}
 </main>
 
 <footer>
+<div id="imageSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa">
+<div style="font-weight:700;margin-bottom:10px">Image controls</div>
+<label style="display:block;font-size:13px;margin:8px 0 4px">Style</label>
+<select id="imageStyle" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="">Original prompt</option><option>Photorealistic</option><option>Anime</option><option>Fantasy</option><option>Horror</option><option>Cinematic</option><option>Digital art</option><option>Watercolor</option></select>
+<label style="display:block;font-size:13px;margin:8px 0 4px">Aspect ratio</label>
+<select id="imageRatio" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="square">Square (1:1)</option><option value="portrait">Portrait (3:4)</option><option value="landscape">Landscape (4:3)</option></select>
+<label style="display:block;font-size:13px;margin:8px 0 4px">Negative prompt (optional)</label>
+<input id="negativePrompt" placeholder="Things to avoid in the image" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px">
+</div>
 <div id="attachInfo"></div>
 <div class="composer" id="composer">
 <div id="fileMenu">
@@ -135,6 +144,7 @@ $("chatTab").onclick=()=>{
   workMode=false;
   $("voiceHero").hidden=$("messages").children.length>0;
   $("prompt").placeholder="Ask Nova AI";
+  $("imageSettings").hidden=true;
   $("chatTab").classList.add("active");
   $("work").classList.remove("active");
 };
@@ -142,6 +152,7 @@ $("work").onclick=()=>{
   workMode=true;
   $("voiceHero").hidden=true;
   $("prompt").placeholder="Describe an image to generate…";
+  $("imageSettings").hidden=false;
   $("work").classList.add("active");
   $("chatTab").classList.remove("active");
 };
@@ -219,7 +230,7 @@ async function send(){
     const r=await fetch(workMode?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(workMode?{prompt:text}:{messages:history})
+      body:JSON.stringify(workMode?{prompt:text,style:$("imageStyle").value,aspectRatio:$("imageRatio").value,negativePrompt:$("negativePrompt").value}:{messages:history})
     });
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
