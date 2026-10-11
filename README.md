@@ -1,33 +1,29 @@
 # Nova AI Assistant
 
-A standalone, Android-friendly AI chat website built with Node.js and Express. This project is independent; it does not import or change any other Nova project.
+Mobile-friendly AI chat web app built with Node.js and Express.
 
-## Features
-- Responsive mobile-first chat UI
-- Multi-turn conversation while the page remains open
-- Voice input when supported by the browser
-- Optional text-to-speech for replies
-- Server-side API key handling (the key is never placed in browser code)
-- Health endpoint for hosting checks
+## Features currently implemented
+- Responsive chat interface with multi-turn context while the page is open
+- Browser speech recognition where supported
+- Image-generation mode through Cloudflare Workers AI, with Pollinations as fallback
+- `/api/health` endpoint to report provider configuration
+- API keys kept on the server, not in browser JavaScript
+- Basic text/CSV/JSON/Markdown attachment reading; PDF and image understanding are not implemented yet
 
 ## Run locally
 1. Install Node.js 18 or newer.
-2. Open this folder in a terminal.
-3. Run `npm install`.
-4. Copy `.env.example` to `.env`.
-5. Put your provider key in `.env` as `OPENAI_API_KEY=your_key_here`.
-6. Run `npm start`.
-7. Open `http://localhost:3000`.
+2. Run `npm install`.
+3. Copy `.env.example` to `.env` and add your provider credentials.
+4. Run `npm start` and open `http://localhost:3000`.
+
+## Environment variables
+- `OPENROUTER_API_KEY` — required for chat replies; server uses the OpenRouter chat completions API.
+- `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` — preferred image provider. The token needs Workers AI permission.
+- `POLLINATIONS_API_KEY` — optional image-provider key used when Cloudflare credentials are not set.
+- `PORT` — optional; defaults to `3000`.
 
 ## Deploy to Render
-Create/use the Render service for this Nova AI Assistant repository only.
-
-- Build command: `npm install`
-- Start command: `npm start`
-- Environment variable: `OPENAI_API_KEY` (required for actual AI replies)
-- Optional environment variable: `OPENAI_MODEL` (defaults to `gpt-4o-mini`)
-
-Do not put real API keys in `index.html`, commit them to GitHub, or share them in chat. Provider usage may cost money. A working deployment requires a valid API key with access to the selected model.
+Use build command `npm install` and start command `npm start`. Add secrets through Render's Environment settings; never commit real keys. A successful deployment still depends on valid provider credentials and quotas.
 
 ## Current limitations
-This version implements AI text chat, browser voice input, and spoken replies. Image generation, video generation, image/file understanding, user accounts, and saved cloud chats are not connected yet; the app does not pretend these features are working.
+Cloud chats/accounts, video generation, PDF text extraction, and image/file vision are not implemented. Image generation and chat depend on upstream provider availability, credentials, and usage limits. The `/api/health` endpoint checks configuration presence, not whether provider credentials actually work.
