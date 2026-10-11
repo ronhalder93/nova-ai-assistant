@@ -252,6 +252,10 @@ async function send(){
       pending.textContent=reply;
       history.push({role:"assistant",content:reply});
     }
+    // Attachments belong to this request only; don't silently resend them next turn.
+    picked.length=0;
+    $("attachInfo").textContent="";
+    $("attachInfo").style.display="none";
   }catch(e){
     pending.textContent="⚠ "+e.message;
     pending.classList.add("error");
