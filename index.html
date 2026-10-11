@@ -56,9 +56,10 @@ header{height:84px}
 <button id="chatTab" class="active">Chat</button>
 <button id="work">✦ Work</button>
 </div>
-<button class="round" id="newChat">◌</button>
+<button class="round" id="newChat" aria-label="Nova menu" title="Nova menu" style="font-size:20px;font-weight:700">N</button>
 </header>
 
+<div id="novaMenu" style="display:none;position:absolute;z-index:20;top:72px;right:14px;width:210px;background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:7px;box-shadow:0 8px 28px #0002"><button data-action="new" style="display:block;width:100%;text-align:left;border:0;background:white;padding:13px;border-radius:10px;font-size:15px">＋　New chat</button><button data-action="chat" style="display:block;width:100%;text-align:left;border:0;background:white;padding:13px;border-radius:10px;font-size:15px">◉　Chat</button><button data-action="image" style="display:block;width:100%;text-align:left;border:0;background:white;padding:13px;border-radius:10px;font-size:15px">✦　Create image</button></div>
 <main id="main">
 <div class="spacer" id="topSpace"></div>
 <section id="voiceHero" aria-label="Nova voice introduction"><div class="orb" aria-hidden="true"></div><h1>Meet Nova Voice</h1><p>More natural conversations, powered by Nova AI.</p><button id="startVoice">Start Voice</button></section>
@@ -128,7 +129,8 @@ function reset(){
   $("send").style.display="none";
   $("mic").style.display="grid";
 }
-$("newChat").onclick=reset;
+$("newChat").onclick=()=>{const m=$("novaMenu");m.style.display=m.style.display==="block"?"none":"block";};
+$("novaMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("novaMenu").style.display="none";if(b.dataset.action==="new")reset();if(b.dataset.action==="chat")$("chatTab").click();if(b.dataset.action==="image")$("work").click();});
 $("startVoice").onclick=()=>$("mic").click();
 $("menuBtn").onclick=()=>add("assistant","Nova AI menu\nUse the + button to attach a file.");
 $("chatTab").onclick=()=>{
