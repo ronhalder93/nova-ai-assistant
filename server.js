@@ -206,7 +206,7 @@ app.post("/api/image", async (req, res) => {
     const apiKey = process.env.POLLINATIONS_API_KEY;
     const url = apiKey
       ? "https://gen.pollinations.ai/image/" + encodeURIComponent(negativePrompt ? enhancedPrompt + ". Avoid: " + negativePrompt : enhancedPrompt) + "?width=" + dimensions.width + "&height=" + dimensions.height + "&nologo=true&model=flux"
-      : "https://image.pollinations.ai/prompt/" + encodeURIComponent(negativePrompt ? enhancedPrompt + ". Avoid: " + negativePrompt : enhancedPrompt) + "?width=" + dimensions.width + "&height=" + dimensions.height + "&nologo=true";
+      : "https://image.pollinations.ai/prompt/" + encodeURIComponent(negativePrompt ? enhancedPrompt + ". Avoid: " + negativePrompt : enhancedPrompt) + "?width=" + dimensions.width + "&height=" + dimensions.height + "&nologo=true&model=flux";
     const headers = { Accept: "image/jpeg,image/png,image/webp", "User-Agent": "NovaAI/1.2" };
     if (apiKey) headers.Authorization = "Bearer " + apiKey;
     const upstream = await fetch(url, { method: "GET", headers, signal: AbortSignal.timeout(90000) });
