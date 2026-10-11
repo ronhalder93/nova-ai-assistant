@@ -8,14 +8,15 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/health", (_req, res) => {
+  const comfyConfigured = Boolean(process.env.COMFYUI_API_URL && process.env.COMFYUI_CHECKPOINT);
   const cloudflareConfigured = Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN);
   res.json({
     ok: true,
     app: "Nova AI Assistant",
     provider: process.env.OPENROUTER_API_KEY ? "OpenRouter" : "Not configured",
     chatConfigured: Boolean(process.env.OPENROUTER_API_KEY),
-    imageProvider: cloudflareConfigured ? "Cloudflare Workers AI" : "Pollinations fallback (Cloudflare not configured)",
-    imageConfigured: cloudflareConfigured || Boolean(process.env.POLLINATIONS_API_KEY)
+    imageProvider: comfyConfigured ? "ComfyUI (external GPU)" : cloudflareConfigured ? "Cloudflare Workers AI" : "Pollinations fallback (configure a provider)",
+    imageConfigured: comfyConfigured || cloudflareConfigured || Boolean(process.env.POLLINATIONS_API_KEY)
   });
 });
 
@@ -52,6 +53,56 @@ app.post("/api/image", async (req, res) => {
   try {
     const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
     if (!prompt) return res.status(400).json({ error: "Enter an image prompt first." });
+
+    // Preferred self-hosted model backend. ComfyUI must be reachable from this server and have the checkpoint installed.
+    const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\\/$/, "");
+    const comfyCheckpoint = process.env.COMFYUI_CHECKPOINT;
+    if (comfyUrl && comfyCheckpoint) {
+      const positive = "high quality, detailed 3D visual novel game render, full body character, natural anatomy, expressive face, detailed hair and skin, cinematic soft lighting, detailed background, polished composition, fictional adult character age 25 or older, " + prompt;
+      const negative = "low quality, blurry, pixelated, cropped head, extreme close-up, extra limbs, malformed hands, bad anatomy, text, watermark, child, minor";
+      const workflow = {
+        "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: comfyCheckpoint } },
+        "2": { class_type: "CLIPTextEncode", inputs: { text: positive, clip: ["1", 1] } },
+        "3": { class_type: "CLIPTextEncode", inputs: { text: negative, clip: ["1", 1] } },
+        "4": { class_type: "EmptyLatentImage", inputs: { width: 768, height: 1024, batch_size: 1 } },
+        "5": { class_type: "KSampler", inputs: { seed: Math.floor(Math.random() * 2147483647), steps: 24, cfg: 7, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 1, model: ["1", 0], positive: ["2", 0], negative: ["3", 0], latent_image: ["4", 0] } },
+        "6": { class_type: "VAEDecode", inputs: { samples: ["5", 0], vae: ["1", 2] } },
+        "7": { class_type: "SaveImage", inputs: { filename_prefix: "nova", images: ["6", 0] } }
+      };
+      const headers = { "Content-Type": "application/json" };
+      if (process.env.COMFYUI_API_KEY) headers["X-API-Key"] = process.env.COMFYUI_API_KEY;
+      const queued = await fetch(comfyUrl + "/prompt", { method: "POST", headers, body: JSON.stringify({ prompt: workflow }), signal: AbortSignal.timeout(30000) });
+      const queuedData = await queued.json().catch(() => ({}));
+      if (!queued.ok || !queuedData.prompt_id) {
+        console.error("ComfyUI queue failed:", queued.status, JSON.stringify(queuedData).slice(0, 500));
+        return res.status(503).json({ error: "ComfyUI rejected the workflow. Check the installed checkpoint name, API URL, and Render logs." });
+      }
+      const promptId = queuedData.prompt_id;
+      const deadline = Date.now() + 150000;
+      let outputImage = null;
+      while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        const historyResponse = await fetch(comfyUrl + "/history/" + encodeURIComponent(promptId), { headers, signal: AbortSignal.timeout(15000) });
+        if (!historyResponse.ok) continue;
+        const history = await historyResponse.json().catch(() => ({}));
+        const outputs = history?.[promptId]?.outputs || {};
+        for (const node of Object.values(outputs)) {
+          if (Array.isArray(node?.images) && node.images.length) { outputImage = node.images[0]; break; }
+        }
+        if (outputImage) break;
+      }
+      if (!outputImage?.filename) return res.status(504).json({ error: "ComfyUI image timed out. Check GPU capacity, model loading, and ComfyUI queue." });
+      const viewUrl = new URL(comfyUrl + "/view");
+      viewUrl.searchParams.set("filename", outputImage.filename);
+      viewUrl.searchParams.set("subfolder", outputImage.subfolder || "");
+      viewUrl.searchParams.set("type", outputImage.type || "output");
+      const imageResponse = await fetch(viewUrl, { headers, signal: AbortSignal.timeout(30000) });
+      const imageType = (imageResponse.headers.get("content-type") || "").toLowerCase();
+      if (!imageResponse.ok || !imageType.startsWith("image/")) return res.status(502).json({ error: "ComfyUI generated an image but Nova could not retrieve it. Check ComfyUI /view access." });
+      const imageBytes = Buffer.from(await imageResponse.arrayBuffer());
+      if (!imageBytes.length || imageBytes.length > 12 * 1024 * 1024) return res.status(502).json({ error: "ComfyUI image was empty or too large." });
+      return res.json({ image: "data:" + imageType.split(";")[0] + ";base64," + imageBytes.toString("base64") });
+    }
 
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
     const cfToken = process.env.CLOUDFLARE_API_TOKEN;
