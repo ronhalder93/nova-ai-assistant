@@ -49,6 +49,53 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+app.get("/api/image/health", async (_req, res) => {
+  const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\\/$/, "");
+  const checkpoint = process.env.COMFYUI_CHECKPOINT || "";
+  if (!comfyUrl || !checkpoint) {
+    return res.json({
+      ok: false,
+      provider: "ComfyUI",
+      configured: false,
+      message: "Set COMFYUI_API_URL and COMFYUI_CHECKPOINT in the server environment."
+    });
+  }
+  try {
+    const headers = {};
+    if (process.env.COMFYUI_API_KEY) headers["X-API-Key"] = process.env.COMFYUI_API_KEY;
+    const response = await fetch(comfyUrl + "/system_stats", {
+      headers,
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) {
+      return res.status(503).json({
+        ok: false,
+        provider: "ComfyUI",
+        configured: true,
+        reachable: false,
+        message: "ComfyUI returned HTTP " + response.status + "."
+      });
+    }
+    const stats = await response.json().catch(() => ({}));
+    return res.json({
+      ok: true,
+      provider: "ComfyUI",
+      configured: true,
+      reachable: true,
+      checkpoint,
+      system: stats?.system?.comfyui_version || "ComfyUI reachable"
+    });
+  } catch (error) {
+    return res.status(503).json({
+      ok: false,
+      provider: "ComfyUI",
+      configured: true,
+      reachable: false,
+      message: "Could not reach ComfyUI from Nova server. Check URL, network access, and API key."
+    });
+  }
+});
+
 app.post("/api/image", async (req, res) => {
   try {
     const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim().slice(0, 1200) : "";
