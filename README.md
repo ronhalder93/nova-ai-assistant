@@ -18,7 +18,8 @@ Mobile-friendly AI chat web app built with Node.js and Express.
 
 ## Environment variables
 - `OPENROUTER_API_KEY` — required for chat replies; server uses the OpenRouter chat completions API.
-- `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` — preferred image provider. The token needs Workers AI permission.
+- `COMFYUI_API_URL` and `COMFYUI_CHECKPOINT` — optional preferred image provider. Point this at a reachable ComfyUI server with a GPU and a compatible checkpoint installed. `COMFYUI_API_KEY` is optional and sent as `X-API-Key`.
+- `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` — image provider fallback. The token needs Workers AI permission.
 - `POLLINATIONS_API_KEY` — optional image-provider key used when Cloudflare credentials are not set.
 - `PORT` — optional; defaults to `3000`.
 
@@ -26,4 +27,4 @@ Mobile-friendly AI chat web app built with Node.js and Express.
 Use build command `npm install` and start command `npm start`. Add secrets through Render's Environment settings; never commit real keys. A successful deployment still depends on valid provider credentials and quotas.
 
 ## Current limitations
-Cloud chats/accounts, video generation, PDF text extraction, and image/file vision are not implemented. Image generation and chat depend on upstream provider availability, credentials, and usage limits. The `/api/health` endpoint checks configuration presence, not whether provider credentials actually work.
+Cloud chats/accounts, video generation, PDF text extraction, and image/file vision are not implemented. ComfyUI is only an integration: you must separately host a reachable ComfyUI instance, install a compatible model checkpoint, and provide its URL. Image generation and chat depend on upstream provider availability, credentials, and usage limits. The `/api/health` endpoint checks configuration presence, not whether provider credentials actually work.
