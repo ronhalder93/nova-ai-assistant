@@ -15,8 +15,8 @@ app.get("/api/health", (_req, res) => {
     app: "Nova AI Assistant",
     provider: process.env.OPENROUTER_API_KEY ? "OpenRouter" : "Not configured",
     chatConfigured: Boolean(process.env.OPENROUTER_API_KEY),
-    imageProvider: comfyConfigured ? "ComfyUI (external GPU)" : cloudflareConfigured ? "Cloudflare Workers AI" : "Pollinations public fallback",
-    imageConfigured: true
+    imageProvider: comfyConfigured ? "ComfyUI (external GPU; reachability checked separately)" : cloudflareConfigured ? "Cloudflare Workers AI" : process.env.POLLINATIONS_API_KEY ? "Pollinations (API key)" : "Not configured",
+    imageConfigured: comfyConfigured || cloudflareConfigured || Boolean(process.env.POLLINATIONS_API_KEY)
   });
 });
 
@@ -208,8 +208,11 @@ app.post("/api/image", async (req, res) => {
 
     const enhancedPrompt = [prompt, "high detail, sharp focus, realistic textures, natural lighting, professional composition"].join(", ");
     const apiKey = process.env.POLLINATIONS_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: "No image provider is configured. For Pony Realism, set COMFYUI_API_URL and COMFYUI_CHECKPOINT. For hosted image generation, set POLLINATIONS_API_KEY in Render Environment Variables." });
+    }
     const imageModel = (process.env.NOVA_IMAGE_MODEL || "flux").trim();
-    const baseUrl = apiKey ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
+    const baseUrl = "https://gen.pollinations.ai/image/";
     const imageUrl = new URL(baseUrl + encodeURIComponent(enhancedPrompt));
     imageUrl.searchParams.set("width", String(dimensions.width));
     imageUrl.searchParams.set("height", String(dimensions.height));
