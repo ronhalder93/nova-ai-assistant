@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,316 +7,31 @@
 <title>Nova AI</title>
 <style>
 :root{color-scheme:light;--text:#171717;--muted:#666;--blue:#315fe9}
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;font-family:Arial,system-ui,sans-serif;background:#fff;color:var(--text)}
-body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-header{height:76px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
-.round{width:48px;height:48px;border:0;border-radius:50%;background:#f7f7f7;font-size:25px;display:grid;place-items:center}
-.tabs{display:flex;align-items:center;background:#ececec;padding:5px;border-radius:36px}
-.tabs button{border:0;border-radius:30px;background:transparent;padding:12px 22px;font-size:16px}
-.tabs button.active{background:#fff;box-shadow:0 1px 5px #0001}
-#work{color:var(--blue)}
-main{flex:1;min-height:0;overflow:auto;padding:10px 22px 20px;display:flex;flex-direction:column}
-.spacer{flex:1;min-height:35px}
-#voiceHero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;flex:1;min-height:320px;padding:20px 12px 38px}
-#voiceHero[hidden]{display:none}
-.orb{width:112px;height:112px;border-radius:50%;margin-bottom:28px;background:radial-gradient(ellipse at 50% 70%,#dce7ff 0%,#a9c4ff 42%,#5685f4 72%,#315fe9 100%);box-shadow:inset 0 -8px 18px #fff7,0 2px 8px #0001}
-#voiceHero h1{font-size:clamp(25px,5vw,38px);line-height:1.2;margin:0 0 14px;font-weight:700;letter-spacing:-.7px}
-#voiceHero p{font-size:clamp(16px,3.6vw,21px);line-height:1.55;color:#666;max-width:540px;margin:0 0 46px}
-#startVoice{border:0;border-radius:40px;background:#090909;color:#fff;font-size:20px;font-weight:600;padding:17px 42px;min-width:220px}
-#startVoice:active{transform:scale(.98)}
-header{height:84px}
-@media(max-width:420px){header{padding:0 14px}.tabs button{padding:12px 18px}#voiceHero{padding-bottom:30px}.orb{width:104px;height:104px}#voiceHero p{margin-bottom:38px}}
-.suggestions{width:100%;max-width:500px;margin:0 auto 12px;display:flex;flex-direction:column}
-.suggestion{border:0;background:transparent;text-align:left;padding:13px 4px;font-size:17px;color:#626262;display:flex;gap:16px;align-items:center}
-.suggestion span{font-size:25px;width:28px;text-align:center}
-#messages{width:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding:8px 0 22px}
-.msg{padding:12px 15px;border-radius:20px;max-width:90%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:16px}
-.user{align-self:flex-end;background:#f0f0f0}
-.assistant{align-self:flex-start;background:#fff}
-.error{color:#b42318}
-#imageLightbox{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:18px}#imageLightbox.open{display:flex}#lightboxImage{max-width:100%;max-height:88dvh;object-fit:contain;border-radius:10px}#closeLightbox{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#111;font-size:30px;line-height:1}#imageLightbox .lightboxHint{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-size:13px}footer{flex-shrink:0;background:#fff;padding:8px 16px calc(12px + env(safe-area-inset-bottom))}
-.composer{position:relative;display:flex;align-items:center;gap:8px;border-radius:38px;background:#f5f5f5;padding:8px 10px;max-width:850px;margin:auto;min-height:66px}
-#prompt{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;font:16px Arial,system-ui;color:#111;max-height:120px;padding:10px 2px}
-.icon{border:0;background:transparent;color:#111;width:42px;height:44px;flex-shrink:0;font-size:27px;display:grid;place-items:center;padding:0}.icon svg{width:25px;height:25px;display:block;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}#mic{color:#111}#prompt{line-height:1.35;min-height:44px}
-.voice{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-size:25px}
-#send{display:none}
-#fileMenu{display:none;position:absolute;left:0;bottom:76px;width:min(285px,85vw);background:#fff;border:1px solid #e5e5e5;border-radius:18px;padding:7px;box-shadow:0 8px 35px #0002;z-index:5}
-#fileMenu button{display:block;width:100%;padding:13px 12px;border:0;background:white;border-radius:11px;text-align:left;font-size:15px;color:#222}
-#attachInfo{display:none;max-width:850px;margin:0 auto 8px;color:#555;font-size:13px;padding:0 10px;overflow-wrap:anywhere}
-.note{text-align:center;color:#777;font-size:11px;margin-top:8px}
-@media(min-width:700px){main{padding-left:30px;padding-right:30px}}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:Arial,system-ui,sans-serif;background:#fff;color:var(--text)}body{height:100dvh;display:flex;flex-direction:column;overflow:hidden}header{height:84px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}.round{width:48px;height:48px;border:0;border-radius:50%;background:#f7f7f7;font-size:25px;display:grid;place-items:center}.tabs{display:flex;align-items:center;background:#ececec;padding:5px;border-radius:36px}.tabs button{border:0;border-radius:30px;background:transparent;padding:12px 22px;font-size:16px}.tabs button.active{background:#fff;box-shadow:0 1px 5px #0001}#work{color:var(--blue)}main{flex:1;min-height:0;overflow:auto;padding:10px 22px 20px;display:flex;flex-direction:column}.spacer{flex:1;min-height:35px}#voiceHero{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:0;flex:1;min-height:320px;padding:20px 12px 38px}#voiceHero[hidden]{display:none}.orb{width:112px;height:112px;border-radius:50%;margin-bottom:28px;background:radial-gradient(ellipse at 50% 70%,#dce7ff 0%,#a9c4ff 42%,#5685f4 72%,#315fe9 100%);box-shadow:inset 0 -8px 18px #fff7,0 2px 8px #0001}#voiceHero h1{font-size:clamp(25px,5vw,38px);line-height:1.2;margin:0 0 14px;font-weight:700;letter-spacing:-.7px}#voiceHero p{font-size:clamp(16px,3.6vw,21px);line-height:1.55;color:#666;max-width:540px;margin:0 0 46px}#startVoice{border:0;border-radius:40px;background:#090909;color:#fff;font-size:20px;font-weight:600;padding:17px 42px;min-width:220px}.suggestions{width:100%;max-width:500px;margin:0 auto 12px;display:flex;flex-direction:column}.suggestion{border:0;background:transparent;text-align:left;padding:13px 4px;font-size:17px;color:#626262;display:flex;gap:16px;align-items:center}.suggestion span{font-size:25px;width:28px;text-align:center}#messages{width:100%;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding:8px 0 22px}.msg{padding:12px 15px;border-radius:20px;max-width:90%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5;font-size:16px}.user{align-self:flex-end;background:#f0f0f0}.assistant{align-self:flex-start;background:#fff}.error{color:#b42318}#imageLightbox{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:18px}#imageLightbox.open{display:flex}#lightboxImage{max-width:100%;max-height:88dvh;object-fit:contain;border-radius:10px}#closeLightbox{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;color:#111;font-size:30px;line-height:1}#imageLightbox .lightboxHint{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-size:13px}footer{flex-shrink:0;background:#fff;padding:8px 16px calc(12px + env(safe-area-inset-bottom))}.composer{position:relative;display:flex;align-items:center;gap:8px;border-radius:38px;background:#f5f5f5;padding:8px 10px;max-width:850px;margin:auto;min-height:66px}#prompt{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;font:16px Arial,system-ui;color:#111;max-height:120px;padding:10px 2px}.icon{border:0;background:transparent;color:#111;width:42px;height:44px;flex-shrink:0;font-size:27px;display:grid;place-items:center;padding:0}.icon svg{width:25px;height:25px;display:block;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}.voice{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-size:25px}#send{display:none}#fileMenu{display:none;position:absolute;left:0;bottom:76px;width:min(285px,85vw);background:#fff;border:1px solid #e5e5e5;border-radius:18px;padding:7px;box-shadow:0 8px 35px #0002;z-index:5}#fileMenu button{display:block;width:100%;padding:13px 12px;border:0;background:white;border-radius:11px;text-align:left;font-size:15px;color:#222}#attachInfo{display:none;max-width:850px;margin:0 auto 8px;color:#555;font-size:13px;padding:0 10px;overflow-wrap:anywhere}.note{text-align:center;color:#777;font-size:11px;margin-top:8px}@media(min-width:700px){main{padding-left:30px;padding-right:30px}}
 </style>
 </head>
 <body>
-<header>
-<button class="round" id="menuBtn">☰</button>
-<div class="tabs">
-<button id="chatTab" class="active">Chat</button>
-<button id="work">✦ Work</button>
-</div>
-<button class="round" id="newChat">◌</button>
-</header>
-
-<main id="main">
-<div class="spacer" id="topSpace"></div>
-<section id="voiceHero" aria-label="Nova voice introduction"><div class="orb" aria-hidden="true"></div><h1>Meet Nova Voice</h1><p>More natural conversations, powered by Nova AI.</p><button id="startVoice">Start Voice</button></section>
-<section class="suggestions" id="suggestions">
-<button class="suggestion" data-prompt="Help me start a voice chat."><span>♧</span>Start a voice chat</button>
-<button class="suggestion" data-prompt="Help me create an image or sticker."><span>▧</span>Create an image or sticker</button>
-<button class="suggestion" data-prompt="Help me write or edit something."><span>✎</span>Write or edit</button>
-</section>
-<section id="messages" aria-live="polite"></section>
-</main>
-
+<header><button class="round" id="menuBtn">☰</button><div class="tabs"><button id="chatTab" class="active">Chat</button><button id="work">✦ Work</button></div><button class="round" id="newChat">◌</button></header>
+<main id="main"><div class="spacer" id="topSpace"></div><section id="voiceHero" aria-label="Nova voice introduction"><div class="orb" aria-hidden="true"></div><h1>Meet Nova Voice</h1><p>More natural conversations, powered by Nova AI.</p><button id="startVoice">Start Voice</button></section><section class="suggestions" id="suggestions"><button class="suggestion" data-prompt="Help me start a voice chat."><span>♧</span>Start a voice chat</button><button class="suggestion" data-prompt="Create an image or sticker of a cute cat."><span>▧</span>Create an image or sticker</button><button class="suggestion" data-prompt="Help me write or edit something."><span>✎</span>Write or edit</button></section><section id="messages" aria-live="polite"></section></main>
 <footer>
-<div id="chatSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa">
-<div style="font-weight:700;margin-bottom:10px">Nova owner controls</div>
-<label style="display:block;font-size:13px;margin:8px 0 4px">OpenRouter model ID</label>
-<input id="chatModel" value="openrouter/free" placeholder="e.g. openrouter/free or provider/model" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white">
-<label style="display:block;font-size:13px;margin:8px 0 4px">Creativity <span id="tempValue">0.8</span></label>
-<input id="chatTemperature" type="range" min="0" max="1.5" step="0.1" value="0.8" style="width:100%">
-<label style="display:block;font-size:13px;margin:8px 0 4px">Maximum response tokens</label>
-<select id="chatTokens" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="500">500 — short</option><option value="1500" selected>1500 — balanced</option><option value="2500">2500 — detailed</option><option value="4000">4000 — long</option></select>
-<label style="display:block;font-size:13px;margin:8px 0 4px">Custom instructions</label>
-<textarea id="chatInstructions" rows="3" maxlength="2000" placeholder="Tone, format, role, preferences…" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white;resize:vertical"></textarea>
-<div style="font-size:12px;color:#666;margin-top:8px">Settings apply to chat requests from this browser. API keys stay on the server. Provider safety policies still apply.</div></div>
-<div id="imageSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa">
-<div style="font-weight:700;margin-bottom:10px">Image controls</div>
-<label style="display:block;font-size:13px;margin:8px 0 4px">Style</label>
-<select id="imageStyle" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="">Original prompt</option><option>Photorealistic</option><option>Anime</option><option>Fantasy</option><option>Horror</option><option>Cinematic</option><option>Digital art</option><option>Watercolor</option></select>
-<label style="display:block;font-size:13px;margin:8px 0 4px">Aspect ratio</label>
-<select id="imageRatio" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="square">Square (1:1)</option><option value="portrait">Portrait (3:4)</option><option value="landscape">Landscape (4:3)</option></select>
-<label style="display:block;font-size:13px;margin:8px 0 4px">Negative prompt (optional)</label>
-<input id="negativePrompt" placeholder="Things to avoid in the image" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px">
-</div>
-<div id="attachInfo"></div>
-<div class="composer" id="composer">
-<div id="fileMenu">
-<button data-kind="image">▧　Upload image from gallery</button>
-<button data-kind="camera">📷　Take a photo</button>
-<button data-kind="document">📎　Upload PDF or document</button>
-<button data-kind="text">📝　Upload TXT / CSV</button>
-<button data-kind="any">📁　Choose any file</button>
-</div>
-<input id="fileInput" type="file" hidden>
-<button class="icon" id="plus" aria-label="Upload files">＋</button>
-<textarea id="prompt" rows="1" placeholder="Ask Nova AI" aria-label="Message Nova AI"></textarea>
-<button class="icon" id="mic" aria-label="Voice input" title="Voice input"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M5.5 10.5v1.2a6.5 6.5 0 0 0 13 0v-1.2M12 18.2V22M8.5 22h7"></path></svg></button>
-<button class="icon voice" id="send" aria-label="Send">↑</button>
-</div>
-<div class="note">AI can make mistakes. Verify important information.</div>
-</footer>
-<div id="imageLightbox" role="dialog" aria-modal="true" aria-label="Full-screen image preview"><button id="closeLightbox" aria-label="Close image preview">×</button><img id="lightboxImage" alt="Full-screen AI generated image"><div class="lightboxHint">Tap outside or × to close</div></div>
-
+<div id="chatSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa"><div style="font-weight:700;margin-bottom:10px">Nova owner controls</div><label style="display:block;font-size:13px;margin:8px 0 4px">OpenRouter model ID</label><input id="chatModel" value="openrouter/free" placeholder="e.g. openrouter/free or provider/model" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><label style="display:block;font-size:13px;margin:8px 0 4px">Creativity <span id="tempValue">0.8</span></label><input id="chatTemperature" type="range" min="0" max="1.5" step="0.1" value="0.8" style="width:100%"><label style="display:block;font-size:13px;margin:8px 0 4px">Maximum response tokens</label><select id="chatTokens" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="500">500 — short</option><option value="1500" selected>1500 — balanced</option><option value="2500">2500 — detailed</option><option value="4000">4000 — long</option></select><label style="display:block;font-size:13px;margin:8px 0 4px">Custom instructions</label><textarea id="chatInstructions" rows="3" maxlength="2000" placeholder="Tone, format, role, preferences…" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white;resize:vertical"></textarea></div>
+<div id="imageSettings" hidden style="max-width:850px;margin:0 auto 10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fafafa"><div style="font-weight:700;margin-bottom:10px">Image controls</div><label style="display:block;font-size:13px;margin:8px 0 4px">Style</label><select id="imageStyle" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="">Original prompt</option><option>Photorealistic</option><option>Anime</option><option>Fantasy</option><option>Horror</option><option>Cinematic</option><option>Digital art</option><option>Watercolor</option></select><label style="display:block;font-size:13px;margin:8px 0 4px">Aspect ratio</label><select id="imageRatio" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;background:white"><option value="square">Square (1:1)</option><option value="portrait">Portrait (3:4)</option><option value="landscape">Landscape (4:3)</option></select><label style="display:block;font-size:13px;margin:8px 0 4px">Negative prompt (optional)</label><input id="negativePrompt" placeholder="Things to avoid in the image" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px"></div>
+<div id="attachInfo"></div><div class="composer" id="composer"><div id="fileMenu"><button data-kind="image">▧　Upload image from gallery</button><button data-kind="camera">📷　Take a photo</button><button data-kind="document">📎　Upload PDF or document</button><button data-kind="text">📝　Upload TXT / CSV</button><button data-kind="any">📁　Choose any file</button></div><input id="fileInput" type="file" hidden><button class="icon" id="plus" aria-label="Upload files">＋</button><textarea id="prompt" rows="1" placeholder="Ask Nova AI" aria-label="Message Nova AI"></textarea><button class="icon" id="mic" aria-label="Voice input"><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="12" rx="3"></rect><path d="M5.5 10.5v1.2a6.5 6.5 0 0 0 13 0v-1.2M12 18.2V22M8.5 22h7"></path></svg></button><button class="icon voice" id="send" aria-label="Send">↑</button></div><div class="note">AI can make mistakes. Verify important information.</div></footer>
+<div id="imageLightbox" role="dialog" aria-modal="true"><button id="closeLightbox" aria-label="Close image preview">×</button><img id="lightboxImage" alt="Full-screen AI generated image"><div class="lightboxHint">Tap outside or × to close</div></div>
 <script>
-const $=id=>document.getElementById(id);
-const history=[],picked=[];
-let busy=false;
-function closeLightbox(){$("imageLightbox").classList.remove("open");$("lightboxImage").removeAttribute("src");}
-$("closeLightbox").onclick=closeLightbox;
-$("imageLightbox").onclick=e=>{if(e.target===$("imageLightbox"))closeLightbox();};
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLightbox();});
-let workMode=false;
-
-function scrollBottom(){
-  $("main").scrollTop=$("main").scrollHeight;
-}
-function add(role,text,extra=""){
-  const d=document.createElement("div");
-  d.className="msg "+role+(extra?" "+extra:"");
-  d.textContent=text;
-  $("messages").append(d);
-  $("suggestions").style.display="none";
-  $("voiceHero").hidden=true;
-  $("topSpace").style.display="none";
-  scrollBottom();
-  return d;
-}
-function reset(){
-  if(busy)return;
-  history.length=0;
-  picked.length=0;
-  $("messages").replaceChildren();
-  $("suggestions").style.display="flex";
-  $("voiceHero").hidden=workMode;
-  $("topSpace").style.display="block";
-  $("attachInfo").style.display="none";
-  $("prompt").value="";
-  $("fileMenu").style.display="none";
-  $("send").style.display="none";
-  $("mic").style.display="grid";
-}
-$("newChat").onclick=reset;
-$("startVoice").onclick=()=>$("mic").click();
-$("menuBtn").onclick=()=>{const panel=$("chatSettings");panel.hidden=!panel.hidden;if(!panel.hidden)$("imageSettings").hidden=true;};
-$("chatTab").onclick=()=>{
-  workMode=false;
-  $("voiceHero").hidden=$("messages").children.length>0;
-  $("prompt").placeholder="Ask Nova AI";
-  $("imageSettings").hidden=true;
-  $("chatSettings").hidden=true;
-  $("chatTab").classList.add("active");
-  $("work").classList.remove("active");
-};
-$("work").onclick=()=>{
-  workMode=true;
-  $("voiceHero").hidden=true;
-  $("prompt").placeholder="Describe an image to generate…";
-  $("imageSettings").hidden=false;
-  $("chatSettings").hidden=true;
-  $("work").classList.add("active");
-  $("chatTab").classList.remove("active");
-};
-$("plus").onclick=()=>{
-  $("fileMenu").style.display=$("fileMenu").style.display==="block"?"none":"block";
-};
-
-$("fileMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{
-  const kind=b.dataset.kind,f=$("fileInput");
-  f.removeAttribute("capture");
-  f.accept=kind==="image"?"image/*":
-    kind==="camera"?"image/*":
-    kind==="document"?".pdf,.doc,.docx,.odt":
-    kind==="text"?".txt,.md,.csv,.json":"*/*";
-  if(kind==="camera")f.setAttribute("capture","environment");
-  f.value="";
-  $("fileMenu").style.display="none";
-  f.click();
-});
-
-$("fileInput").onchange=async()=>{
-  const f=$("fileInput").files[0];
-  if(!f)return;
-  if(f.size>5*1024*1024){
-    add("assistant","Please choose a file smaller than 5 MB.","error");
-    return;
-  }
-  const item={name:f.name,text:"",isImage:f.type.startsWith("image/")};
-  try{
-    if(/\.(txt|md|csv|json)$/i.test(f.name)||f.type.startsWith("text/")){
-      item.text=(await f.text()).slice(0,18000);
-    }else if(/\.pdf$/i.test(f.name)){
-      item.text="PDF selected: "+f.name+". PDF text extraction is not enabled in this version.";
-    }else if(item.isImage){
-      item.text="Image selected: "+f.name+". Image understanding requires a vision-enabled backend.";
-    }else{
-      item.text="File selected: "+f.name+". Automatic reading is not enabled for this file type.";
-    }
-    picked.push(item);
-    $("attachInfo").style.display="block";
-    $("attachInfo").textContent="📎 "+picked.map(x=>x.name).join(" · ");
-    $("prompt").focus();
-  }catch(e){
-    add("assistant","Could not read that file. Try another file.","error");
-  }
-};
-
-$("prompt").addEventListener("input",()=>{
-  const has=$("prompt").value.trim().length>0;
-  $("send").style.display=has?"grid":"none";
-  $("mic").style.display=has?"none":"grid";
-  $("prompt").style.height="auto";
-  $("prompt").style.height=Math.min($("prompt").scrollHeight,120)+"px";
-});
-
-async function send(){
-  if(busy)return;
-  let text=$("prompt").value.trim();
-  const fileContext=picked.length?
-    picked.map(f=>"[Attached file: "+f.name+"]\n"+(f.text||"(No readable text extracted)")).join("\n\n"):"";
-  if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;
-  if(!text)return;
-
-  const displayText=$("prompt").value.trim()+
-    (picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");
-  $("prompt").value="";
-  $("prompt").style.height="auto";
-  $("send").style.display="none";
-  $("mic").style.display="grid";
-  add("user",displayText);
-  history.push({role:"user",content:text});
-  const pending=add("assistant","Nova is thinking…");
-  busy=true;
-  try{
-    const r=await fetch(workMode?"/api/image":"/api/chat",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(workMode?{prompt:text,style:$("imageStyle").value,aspectRatio:$("imageRatio").value,negativePrompt:$("negativePrompt").value}:{messages:history,settings:{model:$("chatModel").value,temperature:Number($("chatTemperature").value),maxTokens:Number($("chatTokens").value),instructions:$("chatInstructions").value}})
-    });
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw new Error(data.error||"Could not get a reply.");
-    if(workMode){
-      if(typeof data.image!=="string" || !data.image.trim()){
-        throw new Error("The image service returned no usable image. Please try a different prompt.");
-      }
-      pending.replaceChildren();
-      const img=document.createElement("img");
-      img.alt="AI generated image — tap to view full screen";
-      img.title="Tap to view full screen";
-      img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px;cursor:zoom-in";
-      img.onclick=()=>{$("lightboxImage").src=img.src;$("imageLightbox").classList.add("open");};
-      img.onload=()=>scrollBottom();
-      img.onerror=()=>{
-        pending.replaceChildren();
-        pending.textContent="⚠ The image service returned an invalid or blocked image. Try a different, clearly adult and non-explicit prompt.";
-        pending.classList.add("error");
-      };
-      img.src=data.image;
-      pending.append(img);
-      const link=document.createElement("a");
-      link.href=data.image;
-      link.download="nova-ai-image.png";
-      link.textContent="Download image";
-      link.style.cssText="display:block;margin-top:10px;color:#315fe9";
-      pending.append(link);
-    }else{
-      const reply=String(data.reply||"No reply received.");
-      pending.textContent=reply;
-      history.push({role:"assistant",content:reply});
-    }
-    // Attachments belong to this request only; don't silently resend them next turn.
-    picked.length=0;
-    $("attachInfo").textContent="";
-    $("attachInfo").style.display="none";
-  }catch(e){
-    pending.textContent="⚠ "+e.message;
-    pending.classList.add("error");
-    history.pop();
-  }finally{
-    busy=false;
-    scrollBottom();
-  }
-}
-$("send").onclick=send;
-$("prompt").addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.shiftKey){
-    e.preventDefault();
-    send();
-  }
-});
-document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{
-  $("prompt").value=b.dataset.prompt;
-  $("prompt").dispatchEvent(new Event("input"));
-  send();
-});
-$("mic").onclick=()=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    add("assistant","Voice input is not supported in this browser. Try Chrome on Android.");
-    return;
-  }
-  const rec=new SR();
-  rec.lang=navigator.language||"en-US";
-  rec.onresult=e=>{
-    $("prompt").value=e.results[0][0].transcript;
-    $("prompt").dispatchEvent(new Event("input"));
-  };
-  rec.onerror=()=>add("assistant","Could not hear that. Please try again.");
-  rec.start();
-};
-$("chatTemperature").addEventListener("input",()=>{$("tempValue").textContent=$("chatTemperature").value;});
-fetch("/api/health").then(r=>r.json()).catch(()=>null);
-</script>
-</body>
-</html>
+const $=id=>document.getElementById(id),history=[],picked=[];let busy=false,workMode=false;
+function closeLightbox(){$("imageLightbox").classList.remove("open");$("lightboxImage").removeAttribute("src")}$("closeLightbox").onclick=closeLightbox;$("imageLightbox").onclick=e=>{if(e.target===$("imageLightbox"))closeLightbox()};document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLightbox()});
+function scrollBottom(){$("main").scrollTop=$("main").scrollHeight}function add(role,text,extra=""){const d=document.createElement("div");d.className="msg "+role+(extra?" "+extra:"");d.textContent=text;$("messages").append(d);$("suggestions").style.display="none";$("voiceHero").hidden=true;$("topSpace").style.display="none";scrollBottom();return d}
+function reset(){if(busy)return;history.length=0;picked.length=0;$("messages").replaceChildren();$("suggestions").style.display="flex";$("voiceHero").hidden=workMode;$("topSpace").style.display="block";$("attachInfo").style.display="none";$("prompt").value="";$("fileMenu").style.display="none";$("send").style.display="none";$("mic").style.display="grid"}$("newChat").onclick=reset;$("startVoice").onclick=()=>$("mic").click();
+$("menuBtn").onclick=()=>{const p=$("chatSettings");p.hidden=!p.hidden;if(!p.hidden)$("imageSettings").hidden=true};
+$("chatTab").onclick=()=>{workMode=false;$("voiceHero").hidden=$("messages").children.length>0;$("prompt").placeholder="Ask Nova AI";$("imageSettings").hidden=true;$("chatSettings").hidden=true;$("chatTab").classList.add("active");$("work").classList.remove("active")};
+$("work").onclick=()=>{workMode=true;$("voiceHero").hidden=true;$("prompt").placeholder="Describe an image to generate…";$("imageSettings").hidden=false;$("chatSettings").hidden=true;$("work").classList.add("active");$("chatTab").classList.remove("active")};
+$("plus").onclick=()=>{$("fileMenu").style.display=$("fileMenu").style.display==="block"?"none":"block"};
+$("fileMenu").querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=b.dataset.kind,f=$("fileInput");f.removeAttribute("capture");f.accept=k==="image"?"image/*":k==="camera"?"image/*":k==="document"?".pdf,.doc,.docx,.odt":k==="text"?".txt,.md,.csv,.json":"*/*";if(k==="camera")f.setAttribute("capture","environment");f.value="";$("fileMenu").style.display="none";f.click()});
+$("fileInput").onchange=async()=>{const f=$("fileInput").files[0];if(!f)return;if(f.size>5*1024*1024){add("assistant","Please choose a file smaller than 5 MB.","error");return}const item={name:f.name,text:"",isImage:f.type.startsWith("image/")};try{if(/\.(txt|md|csv|json)$/i.test(f.name)||f.type.startsWith("text/"))item.text=(await f.text()).slice(0,18000);else if(/\.pdf$/i.test(f.name))item.text="PDF selected: "+f.name+". PDF text extraction is not enabled in this version.";else if(item.isImage)item.text="Image selected: "+f.name+". Image understanding requires a vision-enabled backend.";else item.text="File selected: "+f.name+". Automatic reading is not enabled for this file type.";picked.push(item);$("attachInfo").style.display="block";$("attachInfo").textContent="📎 "+picked.map(x=>x.name).join(" · ");$("prompt").focus()}catch(e){add("assistant","Could not read that file. Try another file.","error")}};
+$("prompt").addEventListener("input",()=>{const has=$("prompt").value.trim().length>0;$("send").style.display=has?"grid":"none";$("mic").style.display=has?"none":"grid";$("prompt").style.height="auto";$("prompt").style.height=Math.min($("prompt").scrollHeight,120)+"px"});
+function looksLikeImageRequest(text){const s=text.toLowerCase().normalize("NFKC");const patterns=[/\b(generate|create|make|draw|render|show)\b.*\b(image|picture|photo|illustration|art|wallpaper|portrait|sticker)\b/,/\b(image|picture|photo|illustration|art|wallpaper|portrait|sticker)\b.*\b(generate|create|make|draw|render)\b/,/\b(image|tasveer|tasvir|photo|chitra|चित्र|तस्वीर|तसवीर)\b.*\b(banao|ban[aá]o|bana do|generate|create|make|draw|dikhao|बनाओ|बना दो|दिखाओ)\b/,/\b(banao|ban[aá]o|bana do|generate|create|make|draw)\b.*\b(image|tasveer|tasvir|photo|chitra|चित्र|तस्वीर|तसवीर)\b/];return patterns.some(p=>p.test(s))}
+async function send(){if(busy)return;let text=$("prompt").value.trim();const fileContext=picked.length?picked.map(f=>"[Attached file: "+f.name+"]\n"+(f.text||"(No readable text extracted)")).join("\n\n"):"";if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;if(!text)return;const displayText=$("prompt").value.trim()+(picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");$("prompt").value="";$("prompt").style.height="auto";$("send").style.display="none";$("mic").style.display="grid";add("user",displayText);const automaticImage=!workMode&&looksLikeImageRequest(text);if(!automaticImage)history.push({role:"user",content:text});const pending=add("assistant",automaticImage?"Nova is creating your image…":"Nova is thinking…");busy=true;try{const imageMode=workMode||automaticImage;const r=await fetch(imageMode?"/api/image":"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(imageMode?{prompt:text,style:$("imageStyle").value,aspectRatio:$("imageRatio").value,negativePrompt:$("negativePrompt").value}:{messages:history,settings:{model:$("chatModel").value,temperature:Number($("chatTemperature").value),maxTokens:Number($("chatTokens").value),instructions:$("chatInstructions").value}})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Could not get a reply.");if(imageMode){if(typeof data.image!=="string"||!data.image.trim())throw new Error("The image service returned no usable image. Please try a different prompt.");pending.replaceChildren();const img=document.createElement("img");img.alt="AI generated image — tap to view full screen";img.style.cssText="display:block;width:100%;max-width:512px;border-radius:14px;cursor:zoom-in";img.onclick=()=>{$("lightboxImage").src=img.src;$("imageLightbox").classList.add("open")};img.onload=()=>scrollBottom();img.onerror=()=>{pending.replaceChildren();pending.textContent="⚠ The image service returned an invalid or blocked image.";pending.classList.add("error")};img.src=data.image;pending.append(img);const link=document.createElement("a");link.href=data.image;link.download="nova-ai-image.png";link.textContent="Download image";link.style.cssText="display:block;margin-top:10px;color:#315fe9";pending.append(link)}else{const reply=String(data.reply||"No reply received.");pending.textContent=reply;history.push({role:"assistant",content:reply})}picked.length=0;$("attachInfo").textContent="";$("attachInfo").style.display="none"}catch(e){pending.textContent="⚠ "+e.message;pending.classList.add("error");if(!automaticImage&&!workMode)history.pop()}finally{busy=false;scrollBottom()}}
+$("send").onclick=send;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});document.querySelectorAll("[data-prompt]").forEach(b=>b.onclick=()=>{$("prompt").value=b.dataset.prompt;$("prompt").dispatchEvent(new Event("input"));send()});
+$("mic").onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){add("assistant","Voice input is not supported in this browser. Try Chrome on Android.");return}const rec=new SR();rec.lang=navigator.language||"en-US";rec.onresult=e=>{$("prompt").value=e.results[0][0].transcript;$("prompt").dispatchEvent(new Event("input"))};rec.onerror=()=>add("assistant","Could not hear that. Please try again.");rec.start()};$("chatTemperature").addEventListener("input",()=>$("tempValue").textContent=$("chatTemperature").value);fetch("/api/health").then(r=>r.json()).catch(()=>null);
+</script></body></html>
