@@ -15,8 +15,8 @@ app.get("/api/health", (_req, res) => {
     app: "Nova AI Assistant",
     provider: process.env.OPENROUTER_API_KEY ? "OpenRouter" : "Not configured",
     chatConfigured: Boolean(process.env.OPENROUTER_API_KEY),
-    imageProvider: comfyConfigured ? "ComfyUI (external GPU)" : cloudflareConfigured ? "Cloudflare Workers AI" : "Pollinations fallback (configure a provider)",
-    imageConfigured: comfyConfigured || cloudflareConfigured || Boolean(process.env.POLLINATIONS_API_KEY)
+    imageProvider: comfyConfigured ? "ComfyUI (external GPU)" : cloudflareConfigured ? "Cloudflare Workers AI" : "Pollinations public fallback",
+    imageConfigured: true
   });
 });
 
