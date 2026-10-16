@@ -235,7 +235,8 @@ $("fileInput").onchange=async()=>{
     }else if(/\.pdf$/i.test(f.name)){
       item.text="PDF selected: "+f.name+". PDF text extraction is not enabled in this version.";
     }else if(item.isImage){
-      item.text="Image selected: "+f.name+". Image understanding requires a vision-enabled backend.";
+      item.data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=reject;reader.readAsDataURL(f);});
+      item.text="Image attached for editing: "+f.name;
     }else{
       item.text="File selected: "+f.name+". Automatic reading is not enabled for this file type.";
     }
@@ -283,7 +284,7 @@ async function send(){
       r=await fetch(generateImage?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(generateImage?{prompt:text}:{messages:history}),
+      body:JSON.stringify(generateImage?{prompt:(picked.some(f=>f.isImage)?($("prompt").value.trim()||"Improve this image while preserving its main subject."):text),image:(picked.find(f=>f.isImage)||{}).data}:{messages:history}),
       signal:controller.signal
       });
     }finally{clearTimeout(requestTimer);}
