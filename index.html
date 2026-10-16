@@ -275,11 +275,17 @@ async function send(){
   const pending=add("assistant","Nova is thinking…");
   busy=true;
   try{
-    const r=await fetch(workMode?"/api/image":"/api/chat",{
+    const controller=new AbortController();
+    const requestTimer=setTimeout(()=>controller.abort(),workMode?210000:60000);
+    let r;
+    try{
+      r=await fetch(workMode?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(workMode?{prompt:text}:{messages:history})
-    });
+      body:JSON.stringify(workMode?{prompt:text}:{messages:history}),
+      signal:controller.signal
+      });
+    }finally{clearTimeout(requestTimer);}
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
     if(workMode){
@@ -312,7 +318,7 @@ async function send(){
       history.push({role:"assistant",content:reply});
     }
   }catch(e){
-    pending.textContent="⚠ "+e.message;
+    pending.textContent="⚠ "+(e.name==="AbortError"?"Nova request timed out. Please try again.":e instanceof TypeError?"Could not connect to Nova server. Refresh the page and try again.":" "+e.message).trim();
     pending.classList.add("error");
     history.pop();
   }finally{
