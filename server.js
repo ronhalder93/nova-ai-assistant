@@ -134,17 +134,14 @@ app.post("/api/chat", async (req, res) => {
         },
         body: JSON.stringify({
           model,
-          provider: {
-            order: ["OpenRouter"],
-            allow_fallbacks: true
-          },
           messages: [
             { role: "system", content: systemPrompt },
             ...messages
           ],
           temperature,
           max_tokens: maxTokens
-        })
+        }),
+        signal: AbortSignal.timeout(55000)
       }
     );
 
