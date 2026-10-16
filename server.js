@@ -16,6 +16,7 @@ app.get("/api/health", (_req, res) => {
     process.env.CLOUDFLARE_ACCOUNT_ID &&
     process.env.CLOUDFLARE_API_TOKEN
   );
+  const huggingFaceConfigured = Boolean(process.env.HF_TOKEN);
 
   res.json({
     ok: true,
@@ -26,18 +27,18 @@ app.get("/api/health", (_req, res) => {
     chatConfigured: Boolean(process.env.OPENROUTER_API_KEY),
     imageProvider: comfyConfigured
       ? "ComfyUI"
-      : cloudflareConfigured
-        ? "Cloudflare Workers AI"
-        : process.env.POLLINATIONS_API_KEY
-          ? "Pollinations"
-          : process.env.OPENROUTER_API_KEY
-            ? "OpenRouter Images"
+      : huggingFaceConfigured
+        ? "Hugging Face Inference"
+        : cloudflareConfigured
+          ? "Cloudflare Workers AI"
+          : process.env.POLLINATIONS_API_KEY
+            ? "Pollinations"
             : "Not configured",
     imageConfigured:
       comfyConfigured ||
+      huggingFaceConfigured ||
       cloudflareConfigured ||
-      Boolean(process.env.POLLINATIONS_API_KEY) ||
-      Boolean(process.env.OPENROUTER_API_KEY)
+      Boolean(process.env.POLLINATIONS_API_KEY)
   });
 });
 
@@ -195,20 +196,20 @@ app.get("/api/image/health", async (_req, res) => {
     process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN
   );
   const pollinationsConfigured = Boolean(process.env.POLLINATIONS_API_KEY);
-  const openRouterConfigured = Boolean(process.env.OPENROUTER_API_KEY);
+  const huggingFaceConfigured = Boolean(process.env.HF_TOKEN);
   const comfyForced = process.env.COMFYUI_FORCE === "true";
 
   if (!comfyForced) {
-    const provider = cloudflareConfigured
-      ? "Cloudflare Workers AI"
-      : pollinationsConfigured
-        ? "Pollinations"
-        : openRouterConfigured
-          ? "OpenRouter Images"
+    const provider = huggingFaceConfigured
+      ? "Hugging Face Inference"
+      : cloudflareConfigured
+        ? "Cloudflare Workers AI"
+        : pollinationsConfigured
+          ? "Pollinations"
           : comfyUrl && checkpoint
             ? "ComfyUI (configured but not selected)"
             : "Not configured";
-    const configured = cloudflareConfigured || pollinationsConfigured || openRouterConfigured;
+    const configured = huggingFaceConfigured || cloudflareConfigured || pollinationsConfigured;
 
     return res.json({
       ok: configured,
@@ -216,7 +217,7 @@ app.get("/api/image/health", async (_req, res) => {
       configured,
       message: configured
         ? "Image provider is configured."
-        : "Add OPENROUTER_API_KEY, Cloudflare account/token, or a Pollinations API key in Render Environment settings. ComfyUI can be selected by setting COMFYUI_FORCE=true."
+        : "Add HF_TOKEN for Hugging Face Inference (monthly free credits may apply), Cloudflare account/token, or a Pollinations API key in Render Environment settings. ComfyUI can be selected by setting COMFYUI_FORCE=true."
     });
   }
 
@@ -555,9 +556,42 @@ app.post("/api/image", async (req, res) => {
       "high detail, sharp focus, realistic textures, natural lighting, professional composition"
     ].join(", ");
 
+    // Free-credit route: Hugging Face Inference Providers. This does not use OpenRouter's paid Images API.
+    // HF_TOKEN must have Inference Providers permission. Requests stop with an error if credits/provider access are unavailable.
+    const hfToken = process.env.HF_TOKEN;
+    if (hfToken) {
+      try {
+        const { InferenceClient } = await import("@huggingface/inference");
+        const client = new InferenceClient(hfToken);
+        const imageBlob = await client.textToImage({
+          model: (process.env.NOVA_HF_IMAGE_MODEL || "black-forest-labs/FLUX.1-schnell").trim(),
+          inputs: enhancedPrompt,
+          parameters: {
+            width: dimensions.width,
+            height: dimensions.height,
+            negative_prompt: negativePrompt || undefined
+          }
+        });
+        const imageBytes = Buffer.from(await imageBlob.arrayBuffer());
+        if (!imageBytes.length) throw new Error("Hugging Face returned an empty image.");
+        return res.json({
+          image: "data:image/png;base64," + imageBytes.toString("base64"),
+          provider: "Hugging Face Inference",
+          model: process.env.NOVA_HF_IMAGE_MODEL || "black-forest-labs/FLUX.1-schnell",
+          width: dimensions.width,
+          height: dimensions.height
+        });
+      } catch (error) {
+        console.error("Hugging Face image generation error:", error.message);
+        return res.status(503).json({
+          error: "Hugging Face image generation failed. Check HF_TOKEN permissions and remaining monthly credits."
+        });
+      }
+    }
+
     const apiKey = process.env.POLLINATIONS_API_KEY;
 
-    if (!apiKey && process.env.OPENROUTER_API_KEY) {
+    if (!apiKey && process.env.OPENROUTER_API_KEY && process.env.NOVA_ALLOW_PAID_OPENROUTER_IMAGES === "true") {
       const imageModel = (process.env.NOVA_OPENROUTER_IMAGE_MODEL || "bytedance-seed/seedream-4.5").trim();
       const openRouterBody = {
         model: imageModel,
@@ -615,7 +649,7 @@ app.post("/api/image", async (req, res) => {
 
     if (!apiKey) {
       return res.status(503).json({
-        error: "No image provider is configured. Add OPENROUTER_API_KEY, set COMFYUI_API_URL and COMFYUI_CHECKPOINT for ComfyUI, or configure POLLINATIONS_API_KEY for Pollinations."
+        error: "No image provider is configured. Add HF_TOKEN for Hugging Face Inference (free monthly credits may apply), or configure another image provider."
       });
     }
 
