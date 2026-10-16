@@ -308,7 +308,30 @@ app.post("/api/image", async (req, res) => {
 
     const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\/$/, "");
     const comfyCheckpoint = process.env.COMFYUI_CHECKPOINT;
-
+    if (sourceImage) {
+      if (!comfyUrl || !comfyCheckpoint || process.env.COMFYUI_FORCE !== "true") return res.status(503).json({ error: "Image editing requires a running ComfyUI connection." });
+      const m = sourceImage.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
+      if (!m) return res.status(400).json({ error: "Use a PNG, JPG, or WebP image." });
+      const bytes = Buffer.from(m[2], "base64");
+      if (bytes.length > 8 * 1024 * 1024) return res.status(413).json({ error: "Image must be 8 MB or smaller." });
+      const boundary = "Nova" + Date.now();
+      const form = Buffer.concat([Buffer.from("--" + boundary + "\r\nContent-Disposition: form-data; name=\"image\"; filename=\"input.png\"\r\nContent-Type: " + m[1] + "\r\n\r\n"), bytes, Buffer.from("\r\n--" + boundary + "--\r\n")]);
+      const auth = process.env.COMFYUI_API_KEY ? { "X-API-Key": process.env.COMFYUI_API_KEY } : {};
+      const u = await fetch(comfyUrl + "/upload/image", { method: "POST", headers: { ...auth, "Content-Type": "multipart/form-data; boundary=" + boundary }, body: form });
+      const file = await u.json().catch(() => ({}));
+      if (!u.ok || !file.name) return res.status(502).json({ error: "ComfyUI image upload failed." });
+      const wf = { "1": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: comfyCheckpoint } }, "2": { class_type: "LoadImage", inputs: { image: file.name } }, "3": { class_type: "CLIPTextEncode", inputs: { text: prompt, clip: ["1",1] } }, "4": { class_type: "VAEEncode", inputs: { pixels: ["2",0], vae: ["1",2] } }, "5": { class_type: "KSampler", inputs: { seed: Date.now() % 2147483647, steps: 24, cfg: 6, sampler_name: "euler", scheduler: "normal", denoise: 0.65, model: ["1",0], positive: ["3",0], negative: ["3",0], latent_image: ["4",0] } }, "6": { class_type: "VAEDecode", inputs: { samples: ["5",0], vae: ["1",2] } }, "7": { class_type: "SaveImage", inputs: { filename_prefix: "nova-edit", images: ["6",0] } } };
+      const qres = await fetch(comfyUrl + "/prompt", { method: "POST", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify({ prompt: wf }) });
+      const q = await qres.json().catch(() => ({}));
+      if (!q.prompt_id) return res.status(503).json({ error: "ComfyUI rejected the edit workflow." });
+      let out = null, until = Date.now() + 120000;
+      while (Date.now() < until && !out) { await new Promise(r => setTimeout(r, 1200)); const hr = await fetch(comfyUrl + "/history/" + q.prompt_id, { headers: auth }); const hist = await hr.json().catch(() => ({})); for (const n of Object.values(hist?.[q.prompt_id]?.outputs || {})) if (n.images?.length) { out = n.images[0]; break; } }
+      if (!out) return res.status(504).json({ error: "Image edit timed out; keep ComfyUI running." });
+      const v = new URL(comfyUrl + "/view"); v.searchParams.set("filename", out.filename); v.searchParams.set("subfolder", out.subfolder || ""); v.searchParams.set("type", out.type || "output");
+      const ir = await fetch(v, { headers: auth }); const ct = ir.headers.get("content-type") || "image/png";
+      if (!ir.ok) return res.status(502).json({ error: "Edited image could not be retrieved." });
+      return res.json({ image: "data:" + ct.split(";")[0] + ";base64," + Buffer.from(await ir.arrayBuffer()).toString("base64") });
+    }
     if (comfyUrl && comfyCheckpoint && process.env.COMFYUI_FORCE === "true") {
       const negative = [
         "low quality, blurry, pixelated, jpeg artifacts, oversaturated, deformed anatomy, extra limbs, duplicate subjects, text, watermark, logo",
