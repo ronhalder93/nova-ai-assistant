@@ -264,7 +264,8 @@ async function send(){
   if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;
   if(!text)return;
 
-  const generateImage = workMode || /\b(make|create|generate|draw|design|render)\b.{0,50}\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b|\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b.{0,40}\b(make|create|generate|draw|design)\b/i.test(text);\n  const displayText=$("prompt").value.trim()+
+  const generateImage = workMode || /\b(make|create|generate|draw|design|render)\b.{0,50}\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b|\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b.{0,40}\b(make|create|generate|draw|design)\b/i.test(text);
+  const displayText=$("prompt").value.trim()+
     (picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");
   $("prompt").value="";
   $("prompt").style.height="auto";
@@ -288,7 +289,7 @@ async function send(){
     }finally{clearTimeout(requestTimer);}
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||"Could not get a reply.");
-    if(workMode){
+    if(generateImage){
       if(typeof data.image!=="string" || !data.image.trim()){
         throw new Error("The image service returned no usable image. Please try a different prompt.");
       }
