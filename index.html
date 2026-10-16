@@ -66,6 +66,46 @@ header{height:84px;backdrop-filter:blur(16px)}
 #attachInfo{display:none;max-width:850px;margin:0 auto 8px;color:#555;font-size:13px;padding:0 10px;overflow-wrap:anywhere}
 .note{text-align:center;color:#777;font-size:11px;margin-top:8px}
 @media(min-width:700px){main{padding-left:30px;padding-right:30px}}
+
+/* Nova AI futuristic HUD — mobile-first dark glass theme */
+:root{color-scheme:dark;--text:#edf0ff;--muted:#9ca6c7;--blue:#9c8cff;--lavender:#211d3a}
+html,body{background:radial-gradient(ellipse at 50% -15%,#34265f 0%,#141426 48%,#0c0d18 100%);color:var(--text)}
+header{background:linear-gradient(180deg,rgba(17,17,34,.88),rgba(17,17,34,.35));border-bottom:1px solid #ffffff0b}
+.round{background:#24233b;color:#f4f2ff;border:1px solid #ffffff12;box-shadow:inset 0 1px #ffffff0b}
+.tabs{background:#211e36;border:1px solid #ffffff12;box-shadow:0 8px 28px #0002}
+.tabs button{color:#a8a5c6}
+.tabs button.active{background:linear-gradient(135deg,#f7f3ff,#dcd3ff);color:#21183e;box-shadow:0 3px 18px #8e78ff25}
+#work{color:#b8aaff}
+#work.active{color:#21183e}
+main{scrollbar-color:#4c456e transparent}
+#messages{gap:18px}
+.msg{border:1px solid #ffffff0c;box-shadow:0 7px 24px #0002;line-height:1.58}
+.user{background:linear-gradient(135deg,#443579,#30284e);color:#fff;border-color:#b5a1ff25;border-bottom-right-radius:7px}
+.assistant{background:linear-gradient(145deg,#1c1d31,#171827);color:#e9eaff;border-color:#ffffff10;border-bottom-left-radius:7px}
+.error{color:#ffaaa9}
+footer{background:linear-gradient(180deg,transparent,#10111f 22%);padding-top:14px}
+.composer{background:rgba(28,28,48,.94);border:1px solid #7165a655;box-shadow:0 0 0 3px #6e5b9c12,0 14px 40px #0004;backdrop-filter:blur(20px)}
+#prompt{color:#f7f5ff}
+#prompt::placeholder{color:#9897b3}
+.icon{color:#eeecff}
+.voice{background:linear-gradient(145deg,#a48dff,#6546d9);box-shadow:0 5px 18px #7455e855;color:#fff}
+#plus{font-size:31px}
+#fileMenu{background:#202039;border:1px solid #ffffff1b;box-shadow:0 14px 38px #0008}
+#fileMenu button{background:transparent;color:#eeeaff}
+#fileMenu button:active,#fileMenu button:hover{background:#343050}
+#attachInfo{color:#b9b4d6}
+.note{color:#85849f}
+.suggestions{background:#17182a;border:1px solid #ffffff13;box-shadow:0 12px 35px #0003}
+.suggestion{color:#d0cde6}
+.suggestion span{color:#a99aff}
+.suggestion:hover{background:#25223e}
+#voiceHero{background:linear-gradient(145deg,#1e1b34,#131522);border-color:#ffffff14;box-shadow:0 18px 55px #0003}
+#voiceHero p{color:#aaa8c5}
+#startVoice{background:linear-gradient(110deg,#a18bff,#5b43ce);color:#fff}
+#imageLightbox{background:rgba(5,5,14,.97)}
+a{color:#b4a4ff}
+@media(max-width:520px){header{height:78px}.composer{min-height:68px}.msg{max-width:94%}}
+
 </style>
 </head>
 <body>
