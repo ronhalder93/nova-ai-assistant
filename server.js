@@ -376,7 +376,7 @@ app.post("/api/image", async (req, res) => {
       const queued = await fetch(comfyUrl + "/prompt", {
         method: "POST",
         headers,
-        body: JSON.stringify({ prompt: workflow }),
+        body: JSON.stringify({ prompt: workflow, client_id: "nova-ai-assistant" }),
         signal: AbortSignal.timeout(30000)
       });
 
