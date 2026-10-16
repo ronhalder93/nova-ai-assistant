@@ -264,7 +264,7 @@ async function send(){
   if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;
   if(!text)return;
 
-  const displayText=$("prompt").value.trim()+
+  const generateImage = workMode || /\b(make|create|generate|draw|design|render)\b.{0,50}\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b|\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b.{0,40}\b(make|create|generate|draw|design)\b/i.test(text);\n  const displayText=$("prompt").value.trim()+
     (picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");
   $("prompt").value="";
   $("prompt").style.height="auto";
@@ -279,10 +279,10 @@ async function send(){
     const requestTimer=setTimeout(()=>controller.abort(),workMode?210000:60000);
     let r;
     try{
-      r=await fetch(workMode?"/api/image":"/api/chat",{
+      r=await fetch(generateImage?"/api/image":"/api/chat",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(workMode?{prompt:text}:{messages:history}),
+      body:JSON.stringify(generateImage?{prompt:text}:{messages:history}),
       signal:controller.signal
       });
     }finally{clearTimeout(requestTimer);}
