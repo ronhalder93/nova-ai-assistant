@@ -30,11 +30,14 @@ app.get("/api/health", (_req, res) => {
         ? "Cloudflare Workers AI"
         : process.env.POLLINATIONS_API_KEY
           ? "Pollinations"
-          : "Not configured",
+          : process.env.OPENROUTER_API_KEY
+            ? "OpenRouter Images"
+            : "Not configured",
     imageConfigured:
       comfyConfigured ||
       cloudflareConfigured ||
-      Boolean(process.env.POLLINATIONS_API_KEY)
+      Boolean(process.env.POLLINATIONS_API_KEY) ||
+      Boolean(process.env.OPENROUTER_API_KEY)
   });
 });
 
@@ -192,6 +195,7 @@ app.get("/api/image/health", async (_req, res) => {
     process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN
   );
   const pollinationsConfigured = Boolean(process.env.POLLINATIONS_API_KEY);
+  const openRouterConfigured = Boolean(process.env.OPENROUTER_API_KEY);
   const comfyForced = process.env.COMFYUI_FORCE === "true";
 
   if (!comfyForced) {
@@ -199,17 +203,20 @@ app.get("/api/image/health", async (_req, res) => {
       ? "Cloudflare Workers AI"
       : pollinationsConfigured
         ? "Pollinations"
-        : comfyUrl && checkpoint
-          ? "ComfyUI (configured but not selected)"
-          : "Not configured";
+        : openRouterConfigured
+          ? "OpenRouter Images"
+          : comfyUrl && checkpoint
+            ? "ComfyUI (configured but not selected)"
+            : "Not configured";
+    const configured = cloudflareConfigured || pollinationsConfigured || openRouterConfigured;
 
     return res.json({
-      ok: cloudflareConfigured || pollinationsConfigured,
+      ok: configured,
       provider,
-      configured: cloudflareConfigured || pollinationsConfigured,
-      message: cloudflareConfigured || pollinationsConfigured
+      configured,
+      message: configured
         ? "Image provider is configured."
-        : "Add Cloudflare account/token or a Pollinations API key in Render Environment settings. ComfyUI can be selected by setting COMFYUI_FORCE=true."
+        : "Add OPENROUTER_API_KEY, Cloudflare account/token, or a Pollinations API key in Render Environment settings. ComfyUI can be selected by setting COMFYUI_FORCE=true."
     });
   }
 
@@ -550,9 +557,65 @@ app.post("/api/image", async (req, res) => {
 
     const apiKey = process.env.POLLINATIONS_API_KEY;
 
+    if (!apiKey && process.env.OPENROUTER_API_KEY) {
+      const imageModel = (process.env.NOVA_OPENROUTER_IMAGE_MODEL || "bytedance-seed/seedream-4.5").trim();
+      const openRouterBody = {
+        model: imageModel,
+        prompt: enhancedPrompt + (negativePrompt ? ", avoid: " + negativePrompt : "")
+      };
+
+      const upstream = await fetch("https://openrouter.ai/api/v1/images", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + process.env.OPENROUTER_API_KEY,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://nova-ai-assistant-9rwb.onrender.com",
+          "X-Title": "Nova AI Assistant"
+        },
+        body: JSON.stringify(openRouterBody),
+        signal: AbortSignal.timeout(120000)
+      });
+
+      const data = await upstream.json().catch(() => ({}));
+
+      if (!upstream.ok) {
+        console.error("OpenRouter image HTTP status:", upstream.status);
+        if (upstream.status === 402) {
+          return res.status(502).json({
+            error: "OpenRouter image generation needs available credits (the Images API checks for at least $1 balance). Add credits or select another image provider."
+          });
+        }
+        if (upstream.status === 401 || upstream.status === 403) {
+          return res.status(502).json({
+            error: "OpenRouter rejected the image request. Check that the existing API key is valid and allowed to use image models."
+          });
+        }
+        return res.status(502).json({
+          error: data?.error?.message || "OpenRouter image generation failed. Check image model availability and account credits."
+        });
+      }
+
+      const generated = data?.data?.[0]?.b64_json;
+      if (typeof generated !== "string" || !generated.length) {
+        return res.status(502).json({
+          error: "OpenRouter did not return image data. Check the selected image model."
+        });
+      }
+
+      const mediaType = data?.data?.[0]?.media_type || "image/png";
+      return res.json({
+        image: "data:" + mediaType + ";base64," + generated,
+        provider: "OpenRouter Images",
+        model: imageModel,
+        width: dimensions.width,
+        height: dimensions.height,
+        cost: data?.usage?.cost
+      });
+    }
+
     if (!apiKey) {
       return res.status(503).json({
-        error: "No image provider is configured. Set COMFYUI_API_URL and COMFYUI_CHECKPOINT for ComfyUI, or POLLINATIONS_API_KEY for Pollinations."
+        error: "No image provider is configured. Add OPENROUTER_API_KEY, set COMFYUI_API_URL and COMFYUI_CHECKPOINT for ComfyUI, or configure POLLINATIONS_API_KEY for Pollinations."
       });
     }
 
