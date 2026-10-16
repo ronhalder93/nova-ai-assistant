@@ -191,13 +191,37 @@ app.post("/api/chat", async (req, res) => {
 app.get("/api/image/health", async (_req, res) => {
   const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\/$/, "");
   const checkpoint = process.env.COMFYUI_CHECKPOINT || "";
+  const cloudflareConfigured = Boolean(
+    process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN
+  );
+  const pollinationsConfigured = Boolean(process.env.POLLINATIONS_API_KEY);
+  const comfyForced = process.env.COMFYUI_FORCE === "true";
+
+  if (!comfyForced) {
+    const provider = cloudflareConfigured
+      ? "Cloudflare Workers AI"
+      : pollinationsConfigured
+        ? "Pollinations"
+        : comfyUrl && checkpoint
+          ? "ComfyUI (configured but not selected)"
+          : "Not configured";
+
+    return res.json({
+      ok: cloudflareConfigured || pollinationsConfigured,
+      provider,
+      configured: cloudflareConfigured || pollinationsConfigured,
+      message: cloudflareConfigured || pollinationsConfigured
+        ? "Image provider is configured."
+        : "Add Cloudflare account/token or a Pollinations API key in Render Environment settings. ComfyUI can be selected by setting COMFYUI_FORCE=true."
+    });
+  }
 
   if (!comfyUrl || !checkpoint) {
     return res.json({
       ok: false,
       provider: "ComfyUI",
       configured: false,
-      message: "Set COMFYUI_API_URL and COMFYUI_CHECKPOINT in the server environment."
+      message: "COMFYUI_FORCE=true needs COMFYUI_API_URL and COMFYUI_CHECKPOINT."
     });
   }
 
@@ -286,7 +310,7 @@ app.post("/api/image", async (req, res) => {
     const comfyUrl = (process.env.COMFYUI_API_URL || "").replace(/\/$/, "");
     const comfyCheckpoint = process.env.COMFYUI_CHECKPOINT;
 
-    if (comfyUrl && comfyCheckpoint) {
+    if (comfyUrl && comfyCheckpoint && process.env.COMFYUI_FORCE === "true") {
       const negative = [
         "low quality, blurry, pixelated, jpeg artifacts, oversaturated, deformed anatomy, extra limbs, duplicate subjects, text, watermark, logo",
         negativePrompt
