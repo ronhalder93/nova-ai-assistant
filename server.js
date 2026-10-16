@@ -5,7 +5,7 @@ const path = require("path");
 
 const app = express();
 app.disable("x-powered-by");
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "12mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/api/health", (_req, res) => {
@@ -267,14 +267,16 @@ app.get("/api/image/health", async (_req, res) => {
 
 app.post("/api/image", async (req, res) => {
   try {
+    const sourceImage = typeof req.body?.image === "string" ? req.body.image : "";
+
     const rawPrompt =
       typeof req.body?.prompt === "string"
         ? req.body.prompt.trim().slice(0, 1200)
         : "";
 
-    if (!rawPrompt) {
+    if (!rawPrompt && !sourceImage) {
       return res.status(400).json({
-        error: "Enter an image prompt first."
+        error: "Enter an image prompt or attach an image to edit."
       });
     }
 
@@ -294,7 +296,7 @@ app.post("/api/image", async (req, res) => {
       ? req.body.aspectRatio
       : "square";
 
-    const prompt = style ? rawPrompt + ", style: " + style : rawPrompt;
+    const prompt = style ? rawPrompt + ", style: " + style : rawPrompt || "Improve this image while preserving its main subject and composition.";
 
     // FIX: Keep this declaration on its own line, outside the comment.
     const dimensions =
