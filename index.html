@@ -265,7 +265,7 @@ async function send(){
   if(fileContext)text=(text?text+"\n\n":"Please help with these attached files.\n\n")+fileContext;
   if(!text)return;
 
-  const generateImage = workMode || /\b(make|create|generate|draw|design|render)\b.{0,50}\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b|\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker)\b.{0,40}\b(make|create|generate|draw|design)\b/i.test(text);
+  const generateImage = workMode || /\b(make|create|generate|draw|design|render|build)\b.{0,50}\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker|house|home|building|room|interior|exterior|architecture|logo|avatar|character|landscape)\b|\b(image|img|picture|photo|wallpaper|illustration|artwork|sticker|house|home|building|room|interior|exterior|architecture|logo|avatar|character|landscape)\b.{0,40}\b(make|create|generate|draw|design|render|build)\b/i.test(text);
   const displayText=$("prompt").value.trim()+
     (picked.length?"\n📎 "+picked.map(f=>f.name).join(", "):"");
   $("prompt").value="";
