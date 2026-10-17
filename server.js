@@ -654,64 +654,60 @@ app.post("/api/image", async (req, res) => {
     }
 
     const imageModel = (process.env.NOVA_IMAGE_MODEL || "flux").trim();
-    const baseUrl = "https://gen.pollinations.ai/image/";
-    const imageUrl = new URL(baseUrl + encodeURIComponent(enhancedPrompt));
-
-    imageUrl.searchParams.set("width", String(dimensions.width));
-    imageUrl.searchParams.set("height", String(dimensions.height));
-    imageUrl.searchParams.set("model", imageModel);
-    imageUrl.searchParams.set("nologo", "true");
-    imageUrl.searchParams.set("enhance", "true");
-
-    if (negativePrompt) {
-      imageUrl.searchParams.set("negative_prompt", negativePrompt);
-    }
-
     const headers = {
-      Accept: "image/jpeg,image/png,image/webp",
+      Accept: "application/json",
+      "Content-Type": "application/json",
       "User-Agent": "NovaAI/1.2",
       Authorization: "Bearer " + apiKey
     };
 
-    const upstream = await fetch(imageUrl.toString(), {
-      method: "GET",
+    // Use the OpenAI-compatible image endpoint so prompts are sent in the request
+    // body rather than a potentially very long URL.
+    const upstream = await fetch("https://gen.pollinations.ai/v1/images/generations", {
+      method: "POST",
       headers,
+      body: JSON.stringify({
+        model: imageModel,
+        prompt: enhancedPrompt + (negativePrompt ? ", avoid: " + negativePrompt : ""),
+        size: dimensions.width + "x" + dimensions.height,
+        response_format: "b64_json"
+      }),
       signal: AbortSignal.timeout(120000)
     });
 
+    const data = await upstream.json().catch(() => ({}));
+
     if (!upstream.ok) {
-      console.error("Pollinations HTTP status:", upstream.status);
-
+      console.error("Pollinations image HTTP status:", upstream.status, data?.error?.message || data?.error || "No error details");
       return res.status(503).json({
-        error: "Image provider unavailable. Check the API key, model, or rate limits."
+        error: upstream.status === 401 || upstream.status === 403
+          ? "Pollinations API key is invalid or lacks permission. Check Render environment settings."
+          : upstream.status === 402
+            ? "Pollinations account has insufficient credits. Check your API key/account balance."
+            : upstream.status === 429
+              ? "Pollinations rate limit reached. Try again later."
+              : "Pollinations image provider unavailable (HTTP " + upstream.status + ")."
       });
     }
 
-    const type = (
-      upstream.headers.get("content-type") || ""
-    ).toLowerCase();
-
-    const bytes = Buffer.from(await upstream.arrayBuffer());
-
-    if (!type.startsWith("image/") || !bytes.length) {
+    const generated = data?.data?.[0]?.b64_json;
+    if (typeof generated !== "string" || !generated.length) {
+      console.error("Pollinations returned no base64 image:", JSON.stringify(data).slice(0, 1000));
       return res.status(502).json({
-        error: "Image provider returned an invalid image response."
+        error: "Pollinations returned no image data. Check the selected model."
       });
     }
 
+    const mediaType = data?.data?.[0]?.media_type || "image/png";
     return res.json({
-      image:
-        "data:" +
-        type.split(";")[0] +
-        ";base64," +
-        bytes.toString("base64"),
+      image: "data:" + mediaType + ";base64," + generated,
       provider: "Pollinations authenticated",
       model: imageModel,
       width: dimensions.width,
       height: dimensions.height
     });
   } catch (error) {
-    console.error("Image generation error:", error.message);
+    console.error("Image generation error:", error.message, error.cause?.code || "", error.cause?.message || "");
 
     return res.status(503).json({
       error: "Image generation is temporarily unavailable. Check Render logs."
