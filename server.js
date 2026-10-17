@@ -583,9 +583,7 @@ app.post("/api/image", async (req, res) => {
         });
       } catch (error) {
         console.error("Hugging Face image generation error:", error.message);
-        return res.status(503).json({
-          error: "Hugging Face image generation failed. Check HF_TOKEN permissions and remaining monthly credits."
-        });
+        // Try the next configured provider instead of failing the entire request.
       }
     }
 
